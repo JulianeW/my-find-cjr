@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 	printf("Parameter 1: %s\n", argv[1]);
 	
 	printf("Anzahl der Argumente: %d\n", argc);
+	printf("committest");
 
 	checkFile(argv[1]);
 
