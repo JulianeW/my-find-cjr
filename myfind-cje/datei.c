@@ -7,8 +7,8 @@
 #include <errno.h>
 
 void checkFile(const char *file);
-do_file(const char * file_name, const char * const * parms);
-do_dir(const char * dir_name, const char * const * parms);
+void do_file(const char * file_name, const char * const * parms);
+void do_dir(const char * dir_name, const char * const * parms);			/* Rene - erfolgreich? */
 
 
 int main(int argc, char* argv[])
