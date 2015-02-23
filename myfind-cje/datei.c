@@ -6,8 +6,12 @@
 #include <unistd.h>
 #include <errno.h>
 
+typedef enum {user, nouser, nmae, noname, path};
+
 void checkFile(const char *file);
-void do_file(const char * file_name, const char * const * parms);
+
+
+void do_dir(const char * dir_name, const char * const * parms);			/* Rene - erfolgreich? */
 void do_dir(const char * dir_name, const char * const * parms);			/* Rene - erfolgreich? */
 
 
@@ -35,7 +39,7 @@ void checkFile(const char *file)
 {
 
 	struct stat mystat;
-	char *error;
+	/*char *error; */
 
 	if(lstat(file,&mystat) == -1)
 	{
