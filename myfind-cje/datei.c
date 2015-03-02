@@ -6,13 +6,14 @@
 #include <unistd.h>
 #include <errno.h>
 
-typedef enum {user, nouser, nmae, noname, path};
+
 
 void checkFile(const char *file);
 
 
-void do_dir(const char * dir_name, const char * const * parms);			/* Rene - erfolgreich? */
-void do_dir(const char * dir_name, const char * const * parms);			/* Rene - erfolgreich? */
+/* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
+/*void do_file(const char * dir_name, const char * const * parms); */		/* Rene - erfolgreich? */
+
 
 
 int main(int argc, char* argv[])
