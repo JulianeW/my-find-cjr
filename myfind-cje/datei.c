@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 	}
 	else if (argc == 2)
 	{
-		if /* (argv[2] != '-print')*/
+		if (argv[2] == 0)/* (argv[2] != '-print')*/
 			correctusage();
 		else /* es werden alle Einträge des aktuellen Directories ausgegeben*/
 
@@ -78,9 +78,11 @@ void checkFile(const char *file)
 
 void ls(const char *file)
 {
+
+
 	struct stat lsstat;
-	fprintf("%ld\t%ld\t%ld\n", lsstat.st_ino, lsstat.st_blksize, lsstat.st_nlink);
-	fprintf("%ld\t%s\t%s\n", lsstat.st_gid, lsstat.st_mtime, file);
+	printf("%ld\t%ld\t%ld\n", (long)lsstat.st_ino, (long)lsstat.st_blksize, (long)lsstat.st_nlink);
+	printf("%ld\t%s\t%s\n", (long)lsstat.st_gid, lsstat.st_mtime, file);
 
 
 }
