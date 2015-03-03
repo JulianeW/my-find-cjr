@@ -11,6 +11,7 @@
 
 
 void checkFile(const char *file);
+void noparam(void);
 
 
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -22,7 +23,11 @@ int main(int argc, char* argv[])
 {
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
 
-	if (argc < 2)
+	if (argc == 1)
+	{
+		noparam();
+	}
+	else if (argc < 2)
 	{
 		fprintf(stderr, "zu wenig Argumente..\n");
 		return EXIT_FAILURE;
@@ -61,5 +66,13 @@ void checkFile(const char *file)
 	 
 	if (S_ISREG(mystat.st_mode)) printf("File: %s\n", file );
 	else if (S_ISDIR(mystat.st_mode)) printf("Directory: %s \n", file);
+
+}
+
+void noparam(void)
+{
+	/* if no parameter is given, the current directory with subdirectory is printeed */
+
+
 
 }
