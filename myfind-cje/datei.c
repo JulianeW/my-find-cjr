@@ -15,6 +15,7 @@ void noparam(void);
 static void correctusage(void);
 void ls(const char *file);
 void modifytime(const char *file, struct stat time);
+void checkpermissions(mode_t st_mode, char *mode);
 
 
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -82,7 +83,7 @@ void ls(const char *file)
 
 	struct stat lsstat;
 	fprintf(stdout, "%ld\t%ld\t%ld\n", (long)lsstat.st_ino, (long)lsstat.st_blksize, (long)lsstat.st_nlink);
-	fprintf(stdout, "%ld\t%s\t%s\n", (long)lsstat.st_gid, modifytime(file, &lsstat.st_mtime), file);
+	fprintf(stdout, "%ld\t%s\t%s\n", (long)lsstat.st_gid, modifytime(file, lsstat.st_mtime), file);
 
 
 }
@@ -132,3 +133,10 @@ static void correctusage(void)
 			, prgname);
 
 }
+
+void checkpermissions(mode_t st_mode, char *mode)
+{
+
+	/* UND-Verknüfung */
+}
+
