@@ -14,6 +14,7 @@ void checkFile(const char *file);
 void noparam(void);
 static void correctusage(void);
 void ls(const char *file);
+void modifytime(const char *file, struct stat time);
 
 
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -90,6 +91,14 @@ void ls(const char *file)
 void noparam(void)
 {
 	/* if no parameter is given, the current directory with subdirectory is printeed */
+
+
+
+}
+
+void modifytime(const char *file, struct stat time)
+{
+
 
 
 
