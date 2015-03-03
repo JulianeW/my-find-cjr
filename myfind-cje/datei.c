@@ -13,6 +13,7 @@ const char *prgname = NULL;
 void checkFile(const char *file);
 void noparam(void);
 static void correctusage(void);
+void ls(const char *file);
 
 
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -29,9 +30,13 @@ int main(int argc, char* argv[])
 	{
 		noparam();
 	}
-	else if (argc < 2)
+	else if (argc == 2)
 	{
-		fprintf(stderr, "zu wenig Argumente..\n");
+		if /* (argv[2] != '-print')*/
+			correctusage();
+		else /* es werden alle Einträge des aktuellen Directories ausgegeben*/
+
+		/* fprintf(stderr, "zu wenig Argumente..\n"); */
 		return EXIT_FAILURE;
 	}
 
@@ -68,6 +73,15 @@ void checkFile(const char *file)
 	 
 	if (S_ISREG(mystat.st_mode)) printf("File: %s\n", file );
 	else if (S_ISDIR(mystat.st_mode)) printf("Directory: %s \n", file);
+
+}
+
+void ls(const char *file)
+{
+	struct stat lsstat;
+	fprintf("%ld\t%ld\t%ld\n", lsstat.st_ino, lsstat.st_blksize, lsstat.st_nlink);
+	fprintf("%ld\t%s\t%s\n", lsstat.st_gid, lsstat.st_mtime, file);
+
 
 }
 
