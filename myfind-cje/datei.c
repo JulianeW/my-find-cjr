@@ -83,6 +83,13 @@ static void correctusage(void)
 {
 	fprintf("Correct use of: %s\n"
 			"-user: searches entries of certain users\n"
-			"-name: searches entries with a given name\n", prgname);
+			"-name: searches entries with a given name\n"
+			"-type (bcdpfls): searches for certain type"
+			"-print: prints name of entry"
+			"-ls: prints certain information of file"
+			"-nouser: searches entries with nouser"
+			"-path: searches entries with given path"
+			"For further information do find --help"
+			, prgname);
 
 }
