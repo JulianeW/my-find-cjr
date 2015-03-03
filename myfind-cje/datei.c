@@ -8,10 +8,11 @@
 #include <time.h>
 #include <malloc.h>
 
-
+const char *prgname = NULL;
 
 void checkFile(const char *file);
 void noparam(void);
+static void correctusage(void);
 
 
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -21,6 +22,7 @@ void noparam(void);
 
 int main(int argc, char* argv[])
 {
+	prgname = argv[0];
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
 
 	if (argc == 1)
@@ -74,5 +76,13 @@ void noparam(void)
 	/* if no parameter is given, the current directory with subdirectory is printeed */
 
 
+
+}
+
+static void correctusage(void)
+{
+	fprintf("Correct use of: %s\n"
+			"-user: searches entries of certain users\n"
+			"-name: searches entries with a given name\n", prgname);
 
 }
