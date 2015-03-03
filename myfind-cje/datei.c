@@ -80,10 +80,9 @@ void checkFile(const char *file)
 void ls(const char *file)
 {
 
-
 	struct stat lsstat;
-	printf("%ld\t%ld\t%ld\n", (long)lsstat.st_ino, (long)lsstat.st_blksize, (long)lsstat.st_nlink);
-	printf("%ld\t%s\t%s\n", (long)lsstat.st_gid, lsstat.st_mtime, file);
+	fprintf(stdout, "%ld\t%ld\t%ld\n", (long)lsstat.st_ino, (long)lsstat.st_blksize, (long)lsstat.st_nlink);
+	fprintf(stdout, "%ld\t%s\t%s\n", (long)lsstat.st_gid, modifytime(file, &lsstat.st_mtime), file);
 
 
 }
@@ -98,10 +97,25 @@ void noparam(void)
 
 void modifytime(const char *file, struct stat time)
 {
+	char timeformated[150];
+	time_t t;
+	struct tm *tmp;
 
+	t = time(NULL);
+	tmp = localtime(&t);
 
+	if (tmp == NULL) {
+	               perror("localtime");
+	               exit(EXIT_FAILURE);
+	           }
 
+	           if (strftime(timeformated, sizeof(timeformated), file, tmp) == 0) {
+	               fprintf(stderr, "Function strftime returned 0");
+	               exit(EXIT_FAILURE);
+	           }
 
+	           printf("%s\n", timeformated);
+	           exit(EXIT_SUCCESS);
 }
 
 static void correctusage(void)
