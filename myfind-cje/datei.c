@@ -14,7 +14,7 @@ void checkFile(const char *file);
 void noparam(void);
 static void correctusage(void);
 void ls(const char *file);
-void modifytime(const char *file, struct stat time);
+char *modifytime(time_t ftime);
 void checkpermissions(mode_t st_mode, char *mode);
 
 
@@ -81,9 +81,18 @@ void checkFile(const char *file)
 void ls(const char *file)
 {
 
+	char fileprm[10];
+	fileprm = "----------";
 	struct stat lsstat;
-	fprintf(stdout, "%ld\t%ld\t%ld\n", (long)lsstat.st_ino, (long)lsstat.st_blksize, (long)lsstat.st_nlink);
-	fprintf(stdout, "%ld\t%s\t%s\n", (long)lsstat.st_gid, modifytime(file, lsstat.st_mtime), file);
+
+	checkpermissions(lsstat.st_mode, fileprm);
+
+	fprintf(stdout, "%ld\t%ld\t%ld\t%ld\n%s",
+			(long)lsstat.st_ino,
+			(long)lsstat.st_blocks/2,
+			(long)lsstat.st_nlink,
+			(long)lsstat.st_gid,
+			modifytime(lsstat.st_mtime), file);
 
 
 }
@@ -96,27 +105,15 @@ void noparam(void)
 
 }
 
-void modifytime(const char *file, struct stat time)
+char *modifytime(time_t ftime)
 {
-	char timeformated[150];
-	time_t t;
-	struct tm *tmp;
+	struct tm *time;
+	static char filetime[30];
 
-	t = time(NULL);
-	tmp = localtime(&t);
+	time=localtime(&ftime);
+	strftime(filetime, sizeof filetime, "%B %d %H:%M ", time);
 
-	if (tmp == NULL) {
-	               perror("localtime");
-	               exit(EXIT_FAILURE);
-	           }
-
-	           if (strftime(timeformated, sizeof(timeformated), file, tmp) == 0) {
-	               fprintf(stderr, "Function strftime returned 0");
-	               exit(EXIT_FAILURE);
-	           }
-
-	           printf("%s\n", timeformated);
-	           exit(EXIT_SUCCESS);
+	    return(filetime);
 }
 
 static void correctusage(void)
@@ -137,6 +134,28 @@ static void correctusage(void)
 void checkpermissions(mode_t st_mode, char *mode)
 {
 
-	/* UND-Verknüfung */
+	if (st_mode & S_IFREG)
+		mode[0] = '-';
+	else if (st_mode & S_IFDIR)
+		mode[0] = 'd';
+	else if (st_mode & S_IRUSR)
+		mode[1] = 'r';
+	else if (st_mode & S_IWUSR)
+		mode[2] = 'w';
+	else if (st_mode & S_IXUSR)
+		mode[3] = 'x';
+	else if (st_mode & S_IRGRP)
+		mode[4] = 'r';
+	else if (st_mode & S_IWGRP)
+		mode[5] = 'w';
+	else if (st_mode & S_IXGRP)
+		mode[6] = 'x';
+	else if (st_mode & S_IROTH)
+		mode[7] = 'r';
+	else if (st_mode & S_IWOTH)
+		mode[8] = 'w';
+	else if (st_mode & S_IXOTH)
+		mode[9] = 'x';
+
 }
 
