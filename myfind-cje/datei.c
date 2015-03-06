@@ -46,6 +46,27 @@
 #include <malloc.h>
 #include <fnmatch.h>
 
+/*
+ * -------------------------------------------------------------- defines
+ */
+
+#define USER "-user"
+#define NOUSER "-nouser"
+#define GROUP "-group"
+#define NOGROUP "-nogroup"
+#define NAME "-name"
+#define PATH "-path"
+#define TYPE "-type"
+#define LS "-ls"
+#define PRINT "-print"
+
+/*
+ * -------------------------------------------------------------- typedefs --
+ */
+
+/*
+ * --------------------------------------------------------------- globals --
+ */
 const char *prgname = NULL;
 
 /*
@@ -58,19 +79,61 @@ static void correctusage(void);
 void ls(const char *file);
 char *modifytime(time_t ftime);
 void checkpermissions(mode_t st_mode, char *mode);
-void check_type(const char * pattern, struct stat statbuf, const char * filename);
-void check_path(const char * pattern, const char * pathname, const char * filename);
-
-
+int check_type(const char * parms, struct stat buffer, const char * dir_name);
+int check_path(const char * parms, const char * pathname, const char * dir_name);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
-/*void do_file(const char * dir_name, const char * const * parms); */		/* Rene - erfolgreich? */
+void do_file(const char * dir_name, const char * const * parms, int parameter_number);
 
 
-
+/**
+ *
+ * \brief
+ *
+ * @todo argument_locator automatisch auf richtige Zahl setzen
+ * @todo parameter_number mit argc verlinken, damit richtige Anzahl automatisch generiert wird; argc - 2?
+ * @todo dir_name "." wenn kein Pfad eingegeben, ansonten Pfad aus argv[1]
+ *
+ * \param argc the number of arguments
+ * \param argv the arguments itselves (including the program name in argv[0])
+ *
+ * \return always "success"
+ * \retval 0 always
+ *
+ */
 int main(int argc, char* argv[])
 {
 	prgname = argv[0];
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
+
+	const char * dir_name = 0; /* current directory is used when no directory is entered */
+
+	int parameter_number = 0;
+
+	/* Creates parameter list from argv. The goal is to have the indicated path or the default path
+	 * 		(if no path is entered) on parameterlist[0] and all the other parameters starting from
+	 * 		parameterlist[1] regardless of whether a path was indicated by the user or not. */
+
+		int j = 0;
+		if(argv[1][0] == '-') /* kein directory wurde eingegeben */
+		{
+			char *parameterlist[argc];
+			parameterlist[0] = ".";
+			parameter_number = argc-1; /* number of parameters without path */
+			for(j=1; 1 < argc; j++)
+			{
+				parameterlist[j] = argv[j];
+			}
+		}
+		else
+		{
+			char *parameterlist[argc-1];
+			parameterlist[0] = argv[1];
+			parameter_number = argc-2; /* number of parameters without path */
+			for(j=1; 1 < argc; j++)
+			{
+				parameterlist[j] = argv[j+1];
+			}
+		}
 
 	if (argc == 1)
 	{
@@ -93,12 +156,92 @@ int main(int argc, char* argv[])
 
 	checkFile(argv[1]);
 
+	do_file(dir_name, &parameterlist[0], parameter_number);
+
 	return EXIT_SUCCESS;
+
 }
 
 /*
  * ------------------------------------------------------------- functions --
  */
+
+/**
+ *
+ * \brief
+ *
+ * @todo Parameternamen?
+ * @todo do_dir einbauen
+ * @todo restliche Funktionen einbauen
+ * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
+ * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
+ * 		gegangen werden
+ * @todo fucking syntax
+ *
+ * \param *parms
+ * \param stat statbuf
+ * \param dir_name
+ *
+ * \return 1 for successful match
+ * \return 0 for unsuccesful match
+ */
+void do_file(const char * dir_name, const char * const * parms, int parameter_number)
+{
+	int i = 0;
+	struct stat buffer; /* new structure for lstat */
+	int check_success = 0; /* 0 = nothing found; check_success = parameter_number = print*/
+
+	for(i=0; i < parameter_number, i++)
+	{
+		if(lstat(dir_name, &buffer) == 0) /* lstat: on success, zero is returned */
+		{
+			if(strcmp(parms[i], USER) == 0) /* strcmp: on success, zero is returned */
+			{
+				/* enter USER FUNCTION */
+			}
+			else if(strcmp(parms[i], NAME) == 0)
+			{
+				/* enter NAME FUNCTION */
+			}
+			else if(strcmp(parms[i], TYPE) == 0)
+			{
+				if(check_type(parms[i], buffer, dir_name) == 1)
+					check_success++;
+			}
+			else if(strcmp(parms[i], PRINT) == 0)
+			{
+				check_success++;
+			}
+			else if(strcmp(parms[i], LS) == 0)
+			{
+				/* ENTER LS FUNCTION */
+			}
+			else if(strcmp(parms[i], NOUSER)== 0)
+			{
+				/* ENTER NOUSER FUNCTION */
+			}
+			else if(strcmp(parms[i], PATH) == 0)
+			{
+				if(check_path(parms[i], dir_name) == 1)
+					check_success++;
+			}
+		}
+		else
+		{
+			/* some kind of error handling */
+		}
+	}
+	if(check_success == parameter_number)
+	{
+		printf("%s\n"[i], dir_name);
+	}
+
+
+
+	/* find some way to  check if directory and open do_dir */
+
+}
+
 
 void checkFile(const char *file)
 {
@@ -217,46 +360,52 @@ void checkpermissions(mode_t st_mode, char *mode)
  * @todo Umsetzung ohne type_chars und help_chars?
  * @todo möglicherweise überprüfen, ob überhaupt ein valider Datentyp eingegeben wurde, bevor in Funktion gegangen wird?!
  *
- * \param *pattern
+ * \param *parms
  * \param stat statbuf
- * \param filename
+ * \param dir_name
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
 
-void check_type(const char * pattern, struct stat statbuf, const char * filename)
+int check_type(const char * parms, struct stat buffer, const char * dir_name)
 {
-	char *type_chars = "bcdflps"; /* bcdflps represent the first letter of the valid types that can be found with myfind/find */
+
+	char *type_chars = "bcdpfls"; /* bcdpfls represent the first letter of the valid types that can be found with myfind/find */
 	char *help_chars = NULL; /* used for strchr */
 
-	help_chars = strchr(type_chars, pattern[0]); /* The strchr() function returns a pointer to the first occurrence of
+	help_chars = strchr(type_chars, parms[0]); /* The strchr() function returns a pointer to the first occurrence of
 		the character c in the string s. It returns a pointer to the matched character or NULL if the character is not found. */
-/*
-	if(strlen(pattern) == 1 && (help_chars != NULL))
+
+	if (strlen(parms) == 1 && (help_chars != NULL))
 	{
-				if ((strcmp(pattern, "b") == 0 && S_ISBLK(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "c") == 0 && S_ISCHR(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "d") == 0 && S_ISDIR(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "f") == 0 && S_ISREG(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "l") == 0 && S_ISLNK(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "p") == 0 && S_ISFIFO(statbuf.st_mode))
-				printf("%s"\n", filename);
-		else if ((strcmp(pattern, "s") == 0 && S_ISSOCK(statbuf.st_mode))
-				printf("%s"\n", filename);
+		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer.st_mode))
+			return 1;
+		else if((strcmp(parms, "c") == 0 && S_ISCHR(buffer.st_mode))
+			return 1;
+		else if ((strcmp(parms, "d") == 0 && S_ISDIR(buffer.st_mode))
+			return 1;
+		else if ((strcmp(parms, "f") == 0 && S_ISREG(buffer.st_mode))
+			return 1;
+		else if ((strcmp(parms, "l") == 0 && S_ISLNK(buffer.st_mode))
+			return 1;
+		else if ((strcmp(parms, "p") == 0 && S_ISFIFO(buffer.st_mode))
+			return 1;
+		else if ((strcmp(parms, "s") == 0 && S_ISSOCK(buffer.st_mode))
+			return 1;
+		else
+			return 0;
 	}
 	else
 	{
-		fprintf(stderr, "INSERT TEXT (CHECK FIND)\n");
+
+		fprintf(stderr, "find: Unknown argument to -type: %s\n", parms);
 		exit(EXIT_FAILURE);
+
 	}
 }
-auskommentiert wegen Syntaxerror */
+
+
 /**
  *
  * \brief Function to check if a valid path was entered and if the path matches match
@@ -269,21 +418,27 @@ auskommentiert wegen Syntaxerror */
  * @todo Brauche ich hier überhaupt eine Funktion?
  * @todo bei path wird gesamter Pfad ausgegeben; Ausgabe muss noch geändert werden
  *
- * \param *pattern
+ * \param *parms
  * \param pathname
- * \param filename
+ * \param dir_name
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
 
-void check_path(const char * pattern, const char * pathname, const char * filename)
+int check_path(const char * parms, const char * pathname, const char * dir_name)
 {
-	if(fnmatch(pattern, pathname, 0) == 0) /* The fnmatch() function checks whether the string argument matches the pattern argument. */
-	{
-		printf("%s"\n, filename);
-	}
 
+	if(fnmatch(parms, pathname, 0) == 0) /* The fnmatch() function checks whether the string argument matches the parms argument. */
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }
+
+
 
 
