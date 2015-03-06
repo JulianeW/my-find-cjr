@@ -22,3 +22,17 @@ doc: clean_doc
 	$(DOXYGEN)
 
 clean_all: clean clean_doc
+
+doc: html pfd
+
+html: 
+  $(DOXYGEN) doxygencgf
+
+pdf: html 
+  $(CD) doc/pdf && \ 
+   $(MV) refman.tex refman_save.tex && \ 
+   $(GREP) -v $(EXCLUDE_PATTERN) refman_save-tex > refman.tex && \
+   $(RM) refman_save.tex && \ 
+   make && \ $(MV) refman.pdf refman.save && \ 
+   $(RM) *.pdf *.html *.tex *.aux *.sty *.log *.eps *.out *.ind *.idx \ *.ilg *.toc *.tps makefile && \ 
+   $(MV) refman.save refman.pdf
