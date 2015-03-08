@@ -81,8 +81,8 @@ static void correctusage(void);
 void ls(const char *file);
 char *modifytime(time_t ftime);
 char *checkpermissions(mode_t st_mode);
-int check_type(const char * parms, struct stat buffer, const char * dir_name);
-int check_path(const char * parms, const char * pathname, const char * dir_name);
+int check_type(const char * parms, struct stat buffer);
+int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat statbuf);
 int check_user(const char * user, struct stat statbuf);
 long string_change(const char * value);
@@ -207,7 +207,7 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 			}
 			else if(strcmp(parms[i], TYPE) == 0)
 			{
-				if(check_type(parms[i], buffer, dir_name) == 1)
+				if(check_type(parms[i], buffer) == 1)
 					check_success++;
 			}
 			else if(strcmp(parms[i], PRINT) == 0)
@@ -382,13 +382,12 @@ char * checkpermissions(mode_t st_mode)
  *
  * \param *parms
  * \param stat statbuf
- * \param dir_name
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
 
-int check_type(const char * parms, struct stat buffer, const char * dir_name)
+int check_type(const char * parms, struct stat buffer)
 {
 
 	char *type_chars = "bcdpfls"; /* bcdpfls represent the first letter of the valid types that can be found with myfind/find */
@@ -401,17 +400,17 @@ int check_type(const char * parms, struct stat buffer, const char * dir_name)
 	{
 		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer.st_mode))
 			return 1;
-		else if((strcmp(parms, "c") == 0 && S_ISCHR(buffer.st_mode))
+		else if (strcmp(parms, "c") == 0 && S_ISCHR(buffer.st_mode))
 			return 1;
-		else if ((strcmp(parms, "d") == 0 && S_ISDIR(buffer.st_mode))
+		else if (strcmp(parms, "d") == 0 && S_ISDIR(buffer.st_mode))
 			return 1;
-		else if ((strcmp(parms, "f") == 0 && S_ISREG(buffer.st_mode))
+		else if (strcmp(parms, "f") == 0 && S_ISREG(buffer.st_mode))
 			return 1;
-		else if ((strcmp(parms, "l") == 0 && S_ISLNK(buffer.st_mode))
+		else if (strcmp(parms, "l") == 0 && S_ISLNK(buffer.st_mode))
 			return 1;
-		else if ((strcmp(parms, "p") == 0 && S_ISFIFO(buffer.st_mode))
+		else if (strcmp(parms, "p") == 0 && S_ISFIFO(buffer.st_mode))
 			return 1;
-		else if ((strcmp(parms, "s") == 0 && S_ISSOCK(buffer.st_mode))
+		else if (strcmp(parms, "s") == 0 && S_ISSOCK(buffer.st_mode))
 			return 1;
 		else
 			return 0;
@@ -439,17 +438,16 @@ int check_type(const char * parms, struct stat buffer, const char * dir_name)
  * @todo bei path wird gesamter Pfad ausgegeben; Ausgabe muss noch geändert werden
  *
  * \param *parms
- * \param pathname
  * \param dir_name
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
 
-int check_path(const char * parms, const char * pathname, const char * dir_name)
+int check_path(const char * parms, const char * dir_name)
 {
 
-	if(fnmatch(parms, pathname, 0) == 0) /* The fnmatch() function checks whether the string argument matches the parms argument. */
+	if(fnmatch(parms, dir_name, 0) == 0) /* The fnmatch() function checks whether the string argument matches the parms argument. */
 	{
 		return 1;
 	}
