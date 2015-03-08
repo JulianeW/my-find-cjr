@@ -78,7 +78,7 @@ void noparam(void);
 static void correctusage(void);
 void ls(const char *file);
 char *modifytime(time_t ftime);
-void checkpermissions(mode_t st_mode, char *mode);
+char *checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat buffer, const char * dir_name);
 int check_path(const char * parms, const char * pathname, const char * dir_name);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
@@ -272,21 +272,19 @@ void checkFile(const char *file)
 void ls(const char *file)
 {
 
-	char fileprm[10];
-	fileprm = "----------";
 	struct stat lsstat;
 
 	lstat(file, &lsstat);
 
-	checkpermissions(lsstat.st_mode, fileprm);
+	checkpermissions(lsstat.st_mode);
 
-	fprintf(stdout, "%ld\t%ld\t%ld\t%ld\n%s",
+	fprintf(stdout, "%ld\t%ld\t%s\t%ld\t%ld\n%s\t%s",
 			(long)lsstat.st_ino,
 			(long)lsstat.st_blocks/2,
+			checkpermissions(lsstat.st_mode),
 			(long)lsstat.st_nlink,
 			(long)lsstat.st_gid,
 			modifytime(lsstat.st_mtime), file);
-
 
 }
 
@@ -324,8 +322,10 @@ static void correctusage(void)
 
 }
 
-void checkpermissions(mode_t st_mode, char *mode)
+char * checkpermissions(mode_t st_mode)
 {
+	static char mode[11];
+	strcpy (mode, "----------");
 
 	if (st_mode & S_IFREG)
 		mode[0] = '-';
@@ -350,6 +350,7 @@ void checkpermissions(mode_t st_mode, char *mode)
 	else if (st_mode & S_IXOTH)
 		mode[9] = 'x';
 
+	return mode;
 }
 
 /**
