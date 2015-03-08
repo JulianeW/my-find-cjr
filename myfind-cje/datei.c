@@ -281,19 +281,18 @@ void ls(const char *file)
 	struct group *mygroup;
 	struct passwd *mypw;
 
-
-	mygroup = getgrgid(gid_t gid);
-
 	lstat(file, &lsstat);
 
-	checkpermissions(lsstat->st_mode);
+	mygroup = getgrgid(gid_t gid);
+	mypw = getpwuid(uid_t uid);
 
-	fprintf(stdout, "%ld\t%ld\t%s\t%ld\t%s\n%s\t%s",
+	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
 			(long)lsstat->st_ino,
 			(long)lsstat->st_blocks/2,
 			checkpermissions(&lsstat->st_mode),
 			(long)lsstat->st_nlink,
-			(long)mygroup->gr_name,
+			mypw->pw_name,
+			mygroup->gr_name,
 			modifytime(&lsstat->st_mtime), file);
 
 }
