@@ -83,6 +83,9 @@ char *modifytime(time_t ftime);
 char *checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat buffer, const char * dir_name);
 int check_path(const char * parms, const char * pathname, const char * dir_name);
+int check_no_user(struct stat statbuf);
+int check_user(const char * user, struct stat statbuf);
+long string_change(const char * value);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
 void do_file(const char * dir_name, const char * const * parms, int parameter_number);
 
@@ -442,6 +445,73 @@ int check_path(const char * parms, const char * pathname, const char * dir_name)
 	{
 		return 0;
 	}
+}
+
+int check_no_user(struct stat statbuf)
+{
+	if(getpwuid(statbuf.st_uid)==NULL)
+		return 1;
+	else
+		return 0;
+}
+
+int check_user(const char * user, struct stat statbuf)
+{
+	int i = 0;
+	int uid = 0;
+	int user_length = strlen(user);
+
+	for(i=0; i<= user_length; i++)
+	{
+		if(!isdigit(user[i]) break; /* check nur Zahlen? */
+
+		if(i == user_length)
+		{
+			if((uid = string_change(user)) > -1)
+			{
+				if(uid == file_info.st_uid) return 1;
+			}
+			return 0;
+		}
+
+		else
+		{
+			struct passwd * userpwd;
+			if((userpwd = (user))==NULL) /* TODO - ERROR */
+
+			else
+			{
+				if(userpwd->pw_uid == file_info.st_uid) return 1;
+				else return 0;
+			}
+
+
+		}
+
+
+	}
+	return 0;
+}
+
+long string_change(const char * value)
+{
+	char *ep;
+	long lvalue;
+	errno = 0;
+
+	lvalue = strtol(value, &ep, 10);
+
+	if(value[0] == '\0') return -1;
+	if(*ep != '\0') return -1
+	if(errno == ERANGE && lval == (LONG_MAX || lval == LONG_MIN))
+	{
+		errno=0;
+		return -1;
+	}
+
+	if(lvalue < 0) return -1;
+
+	return lvalue;
 }
 
 
