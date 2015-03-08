@@ -276,6 +276,8 @@ void ls(const char *file)
 	fileprm = "----------";
 	struct stat lsstat;
 
+	lstat(file, &lsstat);
+
 	checkpermissions(lsstat.st_mode, fileprm);
 
 	fprintf(stdout, "%ld\t%ld\t%ld\t%ld\n%s",
