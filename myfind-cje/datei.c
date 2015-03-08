@@ -277,15 +277,17 @@ void checkFile(const char *file)
 void ls(const char *file)
 {
 
+	/** necessary structs for all information needed in ls */
 	struct stat lsstat;
 	struct group *mygroup;
 	struct passwd *mypw;
 
+	/** filling structs with the file information */
 	lstat(file, &lsstat);
-
 	mygroup = getgrgid(gid_t gid);
 	mypw = getpwuid(uid_t uid);
 
+	/** printing all information asked for in ls */
 	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
 			(long)lsstat->st_ino,
 			(long)lsstat->st_blocks/2,
@@ -299,8 +301,8 @@ void ls(const char *file)
 
 void noparam(void)
 {
-	/* if no parameter is given, the current directory with subdirectory is printeed */
-
+	/** if no parameter is given, the current directory with subdirectory is printeed */
+	/** INSERT print function */
 
 
 }
