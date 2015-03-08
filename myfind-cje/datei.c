@@ -193,7 +193,7 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 	struct stat buffer; /* new structure for lstat */
 	int check_success = 0; /* 0 = nothing found; check_success = parameter_number = print*/
 
-	for(i=0; i < parameter_number, i++)
+	for(i=0; i < parameter_number; i++)
 	{
 		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
