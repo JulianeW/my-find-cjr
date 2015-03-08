@@ -45,6 +45,8 @@
 #include <time.h>
 #include <malloc.h>
 #include <fnmatch.h>
+#include <limits.h>
+#include <pwd.h>
 
 /*
  * -------------------------------------------------------------- defines
@@ -193,7 +195,7 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 
 	for(i=0; i < parameter_number, i++)
 	{
-		if(lstat(dir_name, &buffer) == 0) /* lstat: on success, zero is returned */
+		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
 			if(strcmp(parms[i], USER) == 0) /* strcmp: on success, zero is returned */
 			{
