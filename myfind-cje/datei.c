@@ -278,18 +278,23 @@ void ls(const char *file)
 {
 
 	struct stat lsstat;
+	struct group *mygroup;
+	struct passwd *mypw;
+
+
+	mygroup = getgrgid(gid_t gid);
 
 	lstat(file, &lsstat);
 
-	checkpermissions(lsstat.st_mode);
+	checkpermissions(lsstat->st_mode);
 
-	fprintf(stdout, "%ld\t%ld\t%s\t%ld\t%ld\n%s\t%s",
-			(long)lsstat.st_ino,
-			(long)lsstat.st_blocks/2,
-			checkpermissions(lsstat.st_mode),
-			(long)lsstat.st_nlink,
-			(long)lsstat.st_gid,
-			modifytime(lsstat.st_mtime), file);
+	fprintf(stdout, "%ld\t%ld\t%s\t%ld\t%s\n%s\t%s",
+			(long)lsstat->st_ino,
+			(long)lsstat->st_blocks/2,
+			checkpermissions(&lsstat->st_mode),
+			(long)lsstat->st_nlink,
+			(long)mygroup->gr_name,
+			modifytime(&lsstat->st_mtime), file);
 
 }
 
