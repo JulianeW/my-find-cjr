@@ -474,7 +474,7 @@ int check_user(const char * user, struct stat statbuf)
 	for(i=0; i<= user_length; i++)
 	{
 		if(!isdigit(user[i]) break; /* check nur Zahlen? */
-
+	}
 		if(i == user_length)
 		{
 			if((uid = string_change(user)) > -1)
