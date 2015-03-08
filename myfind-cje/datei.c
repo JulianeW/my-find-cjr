@@ -113,6 +113,7 @@ int main(int argc, char* argv[])
 	const char * dir_name = 0; /* current directory is used when no directory is entered */
 
 	int parameter_number = 0;
+	char *parameterlist[30];
 
 	/* Creates parameter list from argv. The goal is to have the indicated path or the default path
 	 * 		(if no path is entered) on parameterlist[0] and all the other parameters starting from
@@ -154,12 +155,8 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	printf("Parameter 1: %s\n", argv[1]);
-	
-	printf("Anzahl der Argumente: %d\n", argc);
-	printf("committest");
 
-	checkFile(argv[1]);
+	check_name(argv[1]);
 
 	do_file(dir_name, &parameterlist[0], parameter_number);
 
