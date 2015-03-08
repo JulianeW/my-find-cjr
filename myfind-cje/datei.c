@@ -473,7 +473,8 @@ int check_user(const char * user, struct stat statbuf)
 
 	for(i=0; i<= user_length; i++)
 	{
-		if(!isdigit(user[i]) break; /* check nur Zahlen? */
+		if(!isdigit(user[i]))
+			break; /* check nur Zahlen? */
 	}
 		if(i == user_length)
 		{
@@ -487,6 +488,7 @@ int check_user(const char * user, struct stat statbuf)
 		else
 		{
 			struct passwd * userpwd;
+
 			if((userpwd = (user))==NULL) /* TODO - ERROR */
 
 			else
@@ -512,8 +514,8 @@ long string_change(const char * value)
 	lvalue = strtol(value, &ep, 10);
 
 	if(value[0] == '\0') return -1;
-	if(*ep != '\0') return -1
-	if(errno == ERANGE && lval == (LONG_MAX || lval == LONG_MIN))
+	if(*ep != '\0') return -1;
+	if(errno == ERANGE && lvalue == (LONG_MAX || lvalue == LONG_MIN))
 	{
 		errno=0;
 		return -1;
