@@ -75,7 +75,7 @@ const char *prgname = NULL;
  * ------------------------------------------------------------- prototypes--
  */
 
-void checkFile(const char *file);
+void check_name(const char *file);
 void noparam(void);
 static void correctusage(void);
 void ls(const char *file);
@@ -248,7 +248,7 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 }
 
 
-void checkFile(const char *file)
+void check_name(const char *file)
 {
 
 	struct stat mystat;
@@ -266,8 +266,6 @@ void checkFile(const char *file)
 
 	
 	lstat(file, &mystat);
-
-	
 	 
 	if (S_ISREG(mystat.st_mode)) printf("File: %s\n", file );
 	else if (S_ISDIR(mystat.st_mode)) printf("Directory: %s \n", file);
