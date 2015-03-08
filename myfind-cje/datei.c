@@ -480,7 +480,7 @@ int check_user(const char * user, struct stat statbuf)
 		{
 			if((uid = string_change(user)) > -1)
 			{
-				if(uid == file_info.st_uid) return 1;
+				if(uid == statbuf.st_uid) return 1;
 			}
 			return 0;
 		}
@@ -489,19 +489,18 @@ int check_user(const char * user, struct stat statbuf)
 		{
 			struct passwd * userpwd;
 
-			if((userpwd = (user))==NULL) /* TODO - ERROR */
+			if((userpwd = (user))==NULL)
+				fprintf(stdout, "User not found.\n");
 
 			else
 			{
-				if(userpwd->pw_uid == file_info.st_uid) return 1;
+				if(userpwd->pw_uid == statbuf.st_uid) return 1;
 				else return 0;
 			}
 
 
 		}
 
-
-	}
 	return 0;
 }
 
