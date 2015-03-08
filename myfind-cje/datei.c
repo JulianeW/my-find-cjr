@@ -276,7 +276,7 @@ void ls(const char *file)
 {
 
 	/** necessary structs for all information needed in ls */
-	struct stat lsstat;
+	struct stat *lsstat;
 	struct group *mygroup;
 	struct passwd *mypw;
 
@@ -338,9 +338,20 @@ char * checkpermissions(mode_t st_mode)
 
 	if (st_mode & S_IFREG)
 		mode[0] = '-';
-	else if (st_mode & S_IFDIR)
-		mode[0] = 'd';
-	else if (st_mode & S_IRUSR)
+		else if (S_ISCHR(st_mode))
+			mode[0] = 'c';
+		else if (S_ISBLK(st_mode))
+			mode[0] = 'b';
+		else if (S_ISLNK(st_mode))
+			mode[0] = 'l';
+		else if (st_mode & S_IFDIR)
+			mode[0] = 'd';
+		else if (S_ISFIFO(st_mode))
+			mode[0] = 'p';
+		else if(S_ISSOCK(st_mode))
+			mode[0] = 's';
+
+	if (st_mode & S_IRUSR)
 		mode[1] = 'r';
 	else if (st_mode & S_IWUSR)
 		mode[2] = 'w';
