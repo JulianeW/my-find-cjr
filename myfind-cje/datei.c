@@ -48,6 +48,19 @@
 #include <limits.h>
 #include <pwd.h>
 
+/** ---------------------------------------------- typedefs--
+ *
+ */
+
+typedef enum {
+	NAME,
+	USER,
+	TYPE,
+	PRINT,
+	LS,
+	NOUSER,
+	PATH
+} Parameter;
 /*
  * -------------------------------------------------------------- defines
  */
@@ -61,10 +74,6 @@
 #define TYPE "-type"
 #define LS "-ls"
 #define PRINT "-print"
-
-/*
- * -------------------------------------------------------------- typedefs --
- */
 
 /*
  * --------------------------------------------------------------- globals --
