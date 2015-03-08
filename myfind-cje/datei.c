@@ -235,7 +235,7 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 	}
 	if(check_success == parameter_number)
 	{
-		fprintf("%s\n"[i], dir_name);
+		fprintf("%s\n", dir_name);
 	}
 
 
