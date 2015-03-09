@@ -288,8 +288,8 @@ void ls(const char *file)
 
 	/** filling structs with the file information */
 	lstat(file, &lsstat);
-	mygroup = getgrgid(gid_t gid);
-	mypw = getpwuid(uid_t uid);
+	mygroup = getgrgid(&lsstat->st_gid);
+	mypw = getpwuid(&lsstat->st_uid);
 
 	/** printing all information asked for in ls */
 	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
