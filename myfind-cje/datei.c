@@ -79,6 +79,7 @@ typedef enum {
  * --------------------------------------------------------------- globals --
  */
 const char *prgname = NULL;
+static int params_number = 0;
 
 /*
  * ------------------------------------------------------------- prototypes--
@@ -96,7 +97,7 @@ int check_no_user(struct stat statbuf);
 int check_user(const char * user, struct stat statbuf);
 long string_change(const char * value);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
-void do_file(const char * dir_name, const char * const * parms, int parameter_number);
+void do_file(const char * dir_name, const char * const * parms);
 
 
 /**
@@ -117,6 +118,8 @@ void do_file(const char * dir_name, const char * const * parms, int parameter_nu
 int main(int argc, char* argv[])
 {
 	prgname = argv[0];
+	params_number = argc;
+
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
 
 	const char * dir_name = 0; /* current directory is used when no directory is entered */
@@ -196,13 +199,13 @@ int main(int argc, char* argv[])
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
-void do_file(const char * dir_name, const char * const * parms, int parameter_number)
+void do_file(const char * dir_name, const char * const * parms)
 {
 	int i = 0;
 	struct stat buffer; /* new structure for lstat */
 	int check_success = 0; /* 0 = nothing found; check_success = parameter_number = print*/
 
-	for(i=0; i < parameter_number; i++)
+	for(i=0; i <= params_number; i++)
 	{
 		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
