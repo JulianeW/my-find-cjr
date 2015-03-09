@@ -10,7 +10,7 @@ DOXYGEN         = doxygen
 all: datei
 
 myfind: datei.o
-	$(CC) $(OPTFLAGS) myfind.o -o myfind
+	$(CC) $(OPTFLAGS) datei.o -o myfind
 
 clean:
 	$(RM) *.o *.h.gch myfind 
