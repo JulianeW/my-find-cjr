@@ -47,6 +47,7 @@
 #include <fnmatch.h>
 #include <limits.h>
 #include <pwd.h>
+#include <grp.h>
 
 /** ---------------------------------------------- typedefs--
  *
