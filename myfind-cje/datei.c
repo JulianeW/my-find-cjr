@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 
 	check_name(argv[1]);
 
-	do_file(dir_name, &parameterlist[0], parameter_number, param_array[]);
+
 
 	return EXIT_SUCCESS;
 
