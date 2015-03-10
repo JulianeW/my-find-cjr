@@ -48,6 +48,8 @@
 #include <limits.h>
 #include <pwd.h>
 #include <grp.h>
+#include <dirent.h>
+#include <unistd.h>
 
 /** ---------------------------------------------- typedefs--
  *
