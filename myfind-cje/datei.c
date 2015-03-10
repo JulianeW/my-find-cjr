@@ -59,21 +59,11 @@ typedef enum {
 	PRINT,
 	LS,
 	NOUSER,
-	PATH
+	PATH,
+  UNKNOWN OPTION,
+	ARGUMENT
 } Parameter;
-/*
- * -------------------------------------------------------------- defines
- */
 
-#define USER "-user"
-#define NOUSER "-nouser"
-#define GROUP "-group"
-#define NOGROUP "-nogroup"
-#define NAME "-name"
-#define PATH "-path"
-#define TYPE "-type"
-#define LS "-ls"
-#define PRINT "-print"
 
 /*
  * --------------------------------------------------------------- globals --
@@ -97,15 +87,14 @@ int check_no_user(struct stat statbuf);
 int check_user(const char * user, struct stat statbuf);
 long string_change(const char * value);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
-void do_file(const char * dir_name, const char * const * parms);
+void do_file(const char * dir_name, const char * const * parms, param_array[]);
+void check_file_parameter(argv[], argc, *param_array);
 
 
 /**
  *
  * \brief
  *
- * @todo argument_locator automatisch auf richtige Zahl setzen
- * @todo parameter_number mit argc verlinken, damit richtige Anzahl automatisch generiert wird; argc - 2?
  * @todo dir_name "." wenn kein Pfad eingegeben, ansonten Pfad aus argv[1]
  *
  * \param argc the number of arguments
@@ -119,39 +108,13 @@ int main(int argc, char* argv[])
 {
 	prgname = argv[0];
 	params_number = argc;
+  int param_array[argc-1] = {0}
 
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
 
-	const char * dir_name = 0; /* current directory is used when no directory is entered */
-
-	int parameter_number = 0;
-	char *parameterlist[30];
-
-	/* Creates parameter list from argv. The goal is to have the indicated path or the default path
-	 * 		(if no path is entered) on parameterlist[0] and all the other parameters starting from
-	 * 		parameterlist[1] regardless of whether a path was indicated by the user or not. */
-
-		int j = 0;
-		if(argv[1][0] == '-') /* kein directory wurde eingegeben */
-		{
-			char *parameterlist[argc];
-			parameterlist[0] = ".";
-			parameter_number = argc-1; /* number of parameters without path */
-			for(j=1; 1 < argc; j++)
-			{
-				parameterlist[j] = argv[j];
-			}
-		}
-		else
-		{
-			char *parameterlist[argc-1];
-			parameterlist[0] = argv[1];
-			parameter_number = argc-2; /* number of parameters without path */
-			for(j=1; 1 < argc; j++)
-			{
-				parameterlist[j] = argv[j+1];
-			}
-		}
+	const char * dir_name = "."; /* current directory is used when no directory is entered */
+  	
+  check_file_parameter(argv[], argc, &param_array);
 
 	if (argc == 1)
 	{
@@ -170,7 +133,7 @@ int main(int argc, char* argv[])
 
 	check_name(argv[1]);
 
-	do_file(dir_name, &parameterlist[0], parameter_number);
+	do_file(dir_name, &parameterlist[0], parameter_number, param_array[]);
 
 	return EXIT_SUCCESS;
 
@@ -179,27 +142,56 @@ int main(int argc, char* argv[])
 /*
  * ------------------------------------------------------------- functions --
  */
+ 
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param argv[]
+ * \param argc
+ * \param *param_array
+ *
+ */ 
+ 
+void check_file_parameter(argv[], argc, *param_array)
+{
+	int i = 0;
+	for(i = 1; i < argc; i++)
+	{
+	if(scrcmp(argv[i][0], "-")
+	{
+		if(strcmp(argv[i], "-name") == 0) *param_array[i-1] = 0;
+		else if(strcmp(argv[i], "-user") == 0) *param_array[i-1] = 1;
+		else if(strcmp(argv[i], "-type") == 0) *param_array[i-1] = 2;
+		else if(strcmp(argv[i], "-print") == 0) *param_array[i-1] = 3;
+		else if(strcmp(argv[i], "-ls") == 0) *param_array[i-1] = 4;
+		else if(strcmp(argv[i], "-nouser") == 0) *param_array[i-1] = 5;
+		else if(strcmp(argv[i], "-path") == 0) *param_array[i-1] = 6;
+		else *param_array[i-1] = 7;
+	}
+	else *param_array[i-1] = 8;
+	}
+}
 
 /**
  *
  * \brief
  *
- * @todo Parameternamen?
  * @todo do_dir einbauen
  * @todo restliche Funktionen einbauen
  * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
  * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
  * 		gegangen werden
- * @todo fucking syntax
  *
  * \param *parms
- * \param stat statbuf
  * \param dir_name
+ * \param param_array
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
-void do_file(const char * dir_name, const char * const * parms)
+ 
+void do_file(const char * dir_name, const char * const * parms, param_array)
 {
 	int i = 0;
 	struct stat buffer; /* new structure for lstat */
