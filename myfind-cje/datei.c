@@ -60,7 +60,7 @@ typedef enum {
 	LS,
 	NOUSER,
 	PATH,
-  UNKNOWN OPTION,
+	UNKNOWN,
 	ARGUMENT
 } Parameter;
 
@@ -87,8 +87,8 @@ int check_no_user(struct stat statbuf);
 int check_user(const char * user, struct stat statbuf);
 long string_change(const char * value);
 /* void do_dir(const char * dir_name, const char * const * parms); */			/* Rene - erfolgreich? */
-void do_file(const char * dir_name, const char * const * parms, param_array[]);
-void check_file_parameter(argv[], argc, *param_array);
+void do_file(const char * dir_name, const char * const * parms);
+void check_file_parameter(argv[], argc, char *param_array);
 
 
 /**
@@ -107,14 +107,14 @@ void check_file_parameter(argv[], argc, *param_array);
 int main(int argc, char* argv[])
 {
 	prgname = argv[0];
-	params_number = argc;
-  int param_array[argc-1] = {0}
+	params_number = argc-1;
+	int param_array[params_number];
 
 	/* const char * const *paramlist = (const char * const *)&argv[1];*/
 
 	const char * dir_name = "."; /* current directory is used when no directory is entered */
   	
-  check_file_parameter(argv[], argc, &param_array);
+  check_file_parameter(argv, argc, &param_array);
 
 	if (argc == 1)
 	{
@@ -153,24 +153,48 @@ int main(int argc, char* argv[])
  *
  */ 
  
-void check_file_parameter(argv[], argc, *param_array)
+void check_file_parameter(argv[], argc, char *param_array)
 {
-	int i = 0;
-	for(i = 1; i < argc; i++)
+	int i = 1;
+
+	if(scrcmp(argv[i][0], "-") == 0)
 	{
-	if(scrcmp(argv[i][0], "-")
-	{
-		if(strcmp(argv[i], "-name") == 0) *param_array[i-1] = 0;
-		else if(strcmp(argv[i], "-user") == 0) *param_array[i-1] = 1;
-		else if(strcmp(argv[i], "-type") == 0) *param_array[i-1] = 2;
-		else if(strcmp(argv[i], "-print") == 0) *param_array[i-1] = 3;
-		else if(strcmp(argv[i], "-ls") == 0) *param_array[i-1] = 4;
-		else if(strcmp(argv[i], "-nouser") == 0) *param_array[i-1] = 5;
-		else if(strcmp(argv[i], "-path") == 0) *param_array[i-1] = 6;
-		else *param_array[i-1] = 7;
+
+		for(i = 1; i < argc; i++)
+		{
+
+			if(strcmp(argv[i], "-name") == 0) *param_array[i-1] = 0;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-user") == 0) *param_array[i-1] = 1;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-type") == 0) *param_array[i-1] = 2;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-print") == 0) *param_array[i-1] = 3;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-ls") == 0) *param_array[i-1] = 4;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-nouser") == 0) *param_array[i-1] = 5;
+			else
+				{correctusage(); exit(1);}
+
+			if(strcmp(argv[i], "-path") == 0) *param_array[i-1] = 6;
+			else
+				{correctusage(); exit(1);}
+		}
 	}
+
 	else *param_array[i-1] = 8;
-	}
+
 }
 
 /**
@@ -191,7 +215,7 @@ void check_file_parameter(argv[], argc, *param_array)
  * \return 0 for unsuccesful match
  */
  
-void do_file(const char * dir_name, const char * const * parms, param_array)
+void do_file(const char * dir_name, const char * const * parms)
 {
 	int i = 0;
 	struct stat buffer; /* new structure for lstat */
