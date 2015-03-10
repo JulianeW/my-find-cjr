@@ -108,12 +108,14 @@ int main(int argc, char* argv[])
 {
 	prgname = argv[0];
 	params_number = argc-1;
+	const char * dir_name = "."; /* current directory is used when no directory is entered */
 	int param_array[params_number];
+	int i = 0;
 	int j = 0;
 
 	check_file_parameter(argv[], argc, &param_array);
 
-		const char * dir_name = "."; /* current directory is used when no directory is entered */
+
   	
 
 	if (argc == 1)
@@ -130,6 +132,14 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	for (i = 1; i < argc; i++)
+	{
+		if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "help") == 0)
+		{
+			correctusage();
+			exit(1);
+		}
+	}
 
 	check_name(argv[1]);
 
@@ -244,7 +254,7 @@ void do_file(const char * dir_name, const char * const * parms)
 			/* some kind of error handling */
 		}
 	}
-	if(check_success == parameter_number)
+	if(check_success == params_number)
 	{
 		fprintf("%s\n", dir_name);
 	}
@@ -326,7 +336,7 @@ char *modifytime(time_t ftime)
 
 static void correctusage(void)
 {
-	fprintf("Correct use of: %s\n"
+	printf("Correct use of: %s\n"
 			"-user: searches entries of certain users\n"
 			"-name: searches entries with a given name\n"
 			"-type (bcdpfls): searches for certain type"
