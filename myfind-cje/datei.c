@@ -253,49 +253,65 @@ void do_file(const char * dir_name, const char * const * parms)
 {
 	int i = 0;
 	struct stat buffer; /* new structure for lstat */
-	int check_success = 0; /* 0 = nothing found; check_success = parameter_number = print*/
+	int not_found = 0;
 
-	for(i=0; i <= params_number; i++)
+	if(parms[1][0] == "-") i = 1;
+	else i = 2;
+
+	for(i; i <= params_number; i++)
 	{
 		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
-			if(strcmp(parms[i], USER) == 0) /* strcmp: on success, zero is returned */
+			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
 			{
 				/* enter USER FUNCTION */
 			}
-			else if(strcmp(parms[i], NAME) == 0)
+			else if(strcmp(parms[i], "-name") == 0)
 			{
 				/* enter NAME FUNCTION */
 			}
-			else if(strcmp(parms[i], TYPE) == 0)
+			else if(strcmp(parms[i], "-type") == 0)
 			{
-				if(check_type(parms[i], buffer) == 1)
-					check_success++;
+				if(check_type(parms[i+1], buffer) == 1) /* Parameter nach path wird überprüft */
+				{
+					i++; /* spring zum nächsten - */
+				}
+				else
+				{
+					not_found++;
+				}
 			}
-			else if(strcmp(parms[i], PRINT) == 0)
+			else if(strcmp(parms[i], "-print") != 0)
 			{
-				check_success++;
+				not_found++; /* Ändern */
 			}
-			else if(strcmp(parms[i], LS) == 0)
+			else if(strcmp(parms[i], "-ls") == 0)
 			{
 				/* ENTER LS FUNCTION */
 			}
-			else if(strcmp(parms[i], NOUSER)== 0)
+			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
 				/* ENTER NOUSER FUNCTION */
 			}
-			else if(strcmp(parms[i], PATH) == 0)
+			else if(strcmp(parms[i], "-path") == 0)
 			{
-				if(check_path(parms[i], dir_name) == 1)
-					check_success++;
+				if(check_path(parms[i+1], dir_name) == 1) /* Parameter nach path wird überprüft */
+				{
+					i++;
+				}
+				else
+				{
+					not_found++;
+				}
+			}
+			}
+			else
+			{
+				/* some kind of error handling */
 			}
 		}
-		else
-		{
-			/* some kind of error handling */
-		}
-	}
-	if(check_success == params_number)
+
+	if (not_found == 0) /* 0: alle Parameter gefunden */
 	{
 		fprintf("%s\n", dir_name);
 	}
