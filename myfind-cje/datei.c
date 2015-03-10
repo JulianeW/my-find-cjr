@@ -60,7 +60,6 @@ typedef enum {
 	LS,
 	NOUSER,
 	PATH,
-	UNKNOWN,
 	ARGUMENT
 } Parameter;
 
@@ -147,8 +146,8 @@ int main(int argc, char* argv[])
  *
  * \brief Function to check what kind of parameter is used
  *
- * \param argv[]
- * \param argc
+ * \param *parms[]
+ * \param params_number
  * \param *param_array
  *
  */ 
@@ -159,41 +158,24 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[])
 
 	if(strcmp(parms[i][0], "-") == 0)
 	{
-
 		for(i = 1; i <= params_number; i++)
 		{
 
 			if(strcmp(parms[i], "-name") == 0) *param_array[i-1] = 0;
+			else if (strcmp(parms[i], "-user") == 0) *param_array[i-1] = 1;
+			else if(strcmp(parms[i], "-type") == 0) *param_array[i-1] = 2;
+			else if(strcmp(parms[i], "-print") == 0) *param_array[i-1] = 3;
+			else if(strcmp(parms[i], "-ls") == 0) *param_array[i-1] = 4;
+			else if(strcmp(parms[i], "-nouser") == 0) *param_array[i-1] = 5;
+			else if(strcmp(parms[i], "-path") == 0) *param_array[i-1] = 6;
 			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-user") == 0) *param_array[i-1] = 1;
-			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-type") == 0) *param_array[i-1] = 2;
-			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-print") == 0) *param_array[i-1] = 3;
-			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-ls") == 0) *param_array[i-1] = 4;
-			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-nouser") == 0) *param_array[i-1] = 5;
-			else
-				{correctusage(); exit(1);}
-
-			if(strcmp(parms[i], "-path") == 0) *param_array[i-1] = 6;
-			else
-				{correctusage(); exit(1);}
+			{
+				correctusage();
+				exit(1);
+			}
 		}
 	}
-
-	else *param_array[i-1] = 8;
+	else *param_array[i-1] = 7;
 
 }
 
