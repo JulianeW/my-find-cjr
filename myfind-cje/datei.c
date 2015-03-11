@@ -189,9 +189,8 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[])
  *
  * \brief Function to check what kind of parameter is used
  *
- * \param *parms[]
- * \param params_number
- * \param *param_array
+ * \param *dir_name
+ * \param *parms
  *
  */
 
@@ -257,7 +256,7 @@ void do_file(const char * dir_name, const char * const * parms)
 	struct stat buffer; /* new structure for lstat */
 	int not_found = 0;
 
-	if(&parms[1][0] == "-") i = 1;
+	if(parms[1][0] == "-") i = 1;
 	else i = 2;
 
 	for(;i <= params_number; i++)
