@@ -346,7 +346,6 @@ void check_name(const char *file)
 
 	struct stat mystat;
 
-
 	/* Fehlerbehandlung und Fehlerausgabe über errno */
 	if(lstat(file,&mystat) == -1)
 	{
