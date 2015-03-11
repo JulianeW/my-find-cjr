@@ -192,43 +192,53 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[])
 
 }
 
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param *parms[]
+ * \param params_number
+ * \param *param_array
+ *
+ */
+
 void do_dir(const char * dir_name, const char * const * parms)
 {
 	 const int dir_length = strlen(dir_name);
 	 const struct dirent *dirent;
 	 DIR *dir = opendir(dir_name);
-	 char *fullname = NULL;
-	 int fullname_size = 0;
+	 char *comp_name = NULL;
+	 int comp_size = 0;
 
 	 if (dir == NULL)
 	 {
 	     fprintf(stderr, "%s: %s: %s\n", prgname, dir_name, strerror(errno));
 	     return;
 	 }
+
 	 while((dirent = readdir(dir)) != NULL)
 	 {
-	     int newlen;
+	     int new_length;
 	     if (strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0)
 	     {
 	         continue;
 	     }
-	     newlen = dirname_len + 1 + strlen(dirent->d_name) + 1; /* a '/' and the terminating '\0' */
-	     if (newlen > fullname_size) {
-	        fullname_size = newlen;
-	        fullname = realloc(fullname, fullname_size);
-	        if (fullname == NULL) {
+	     new_length = dir_length + 1 + strlen(dirent->d_name) + 1; /* including the terminating '\0' */
+	     if (new_length > comp_size) {
+	        comp_size = new_length;
+	        comp_name = realloc(comp_name, comp_size);
+	        if (comp_name == NULL) {
 	           fprintf(stderr, "Out of memory!\n");
 	           exit(1);
 	           }
 	        }
-	        sprintf(fullname, "%s/%s", dirname, dirent->d_name);
-	        do_file(fullname, parms);
+	        sprintf(comp_name, "%s/%s", dir_name, dirent->d_name);
+	        do_file(comp_name, parms);
 	    }
-	    free(fullname);
+	    free(comp_name);
 	    closedir(dir);
 	}
 
-}
 
 /**
  *
@@ -321,6 +331,15 @@ void do_file(const char * dir_name, const char * const * parms)
 
 }
 
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param *parms[]
+ * \param params_number
+ * \param *param_array
+ *
+ */
 
 void check_name(const char *file)
 {
@@ -347,6 +366,14 @@ void check_name(const char *file)
 
 }
 
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param *file
+ *
+ */
+
 void ls(const char *file)
 {
 
@@ -355,12 +382,12 @@ void ls(const char *file)
 	struct group *mygroup;
 	struct passwd *mypw;
 
-	/** filling structs with the file information */
+	/** filling structs with the file information and getting owner and group information */
 	lstat(file, &lsstat);
 	mygroup = getgrgid(&lsstat->st_gid);
 	mypw = getpwuid(&lsstat->st_uid);
 
-	/** printing all information asked for in ls */
+	/** calling necessary functions and printing all information asked for in ls */
 	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
 			(long)lsstat->st_ino,
 			(long)lsstat->st_blocks/2,
@@ -380,6 +407,14 @@ void noparam(void)
 
 }
 
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param ftime
+ *
+ */
+
 char *modifytime(time_t ftime)
 {
 	struct tm *time;
@@ -390,6 +425,8 @@ char *modifytime(time_t ftime)
 
 	    return(filetime);
 }
+
+/** no parameter needed for this function */
 
 static void correctusage(void)
 {
@@ -405,6 +442,14 @@ static void correctusage(void)
 			, prgname);
 
 }
+
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param st_mode
+ *
+ */
 
 char * checkpermissions(mode_t st_mode)
 {
