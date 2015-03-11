@@ -413,6 +413,8 @@ void ls(const char *file)
 		{
 			fprintf(stderr, "%s\n", strerror(errno));
 		}
+
+		free(link);
 	}
 
 }
