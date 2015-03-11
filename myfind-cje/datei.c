@@ -80,7 +80,7 @@ static int params_number = 0;
 void check_name(const char *file);
 void noparam(void);
 static void correctusage(void);
-void ls(const char *file);
+void ls(const char *file, struct stat lsstat);
 char *modifytime(time_t ftime);
 char *checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat buffer);
@@ -113,12 +113,9 @@ int main(int argc, char* argv[])
 	const char * dir_name = "."; /* current directory is used when no directory is entered */
 	int param_array[params_number];
 	int i = 0;
-	int j = 0;
 
 	check_file_parameter(argv, argc, &param_array);
 
-
-  	
 
 	if (argc == 1)
 	{
@@ -143,12 +140,8 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	check_name(argv[1]);
-
-
 
 	return EXIT_SUCCESS;
-
 }
 
 /*
@@ -169,7 +162,7 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[])
 {
 	int i = 1;
 
-	if(strcmp(parms[i][0], "-") == 0)
+	if(strcmp(&parms[i][0], "-") == 0)
 	{
 		for(i = 1; i <= params_number; i++)
 		{
@@ -264,10 +257,10 @@ void do_file(const char * dir_name, const char * const * parms)
 	struct stat buffer; /* new structure for lstat */
 	int not_found = 0;
 
-	if(parms[1][0] == "-") i = 1;
+	if(&parms[1][0] == "-") i = 1;
 	else i = 2;
 
-	for(i; i <= params_number; i++)
+	for(;i <= params_number; i++)
 	{
 		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
@@ -296,7 +289,7 @@ void do_file(const char * dir_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
-				ls(&dir_name);
+				ls(dir_name, buffer);
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
@@ -322,7 +315,7 @@ void do_file(const char * dir_name, const char * const * parms)
 
 	if (not_found == 0) /* 0: alle Parameter gefunden */
 	{
-		fprintf("%s\n", dir_name);
+		printf("%s\n", dir_name);
 	}
 
 	/* check if directory and open directory */
@@ -371,31 +364,29 @@ void check_name(const char *file)
  *
  */
 
-void ls(const char *file)
+void ls(const char *file, struct stat lsstat)
 {
 
 	/** necessary structs for all information needed in ls */
-	struct stat *lsstat;
 	struct group *mygroup;
 	struct passwd *mypw;
 
 	/** filling structs with the file information and getting owner and group information */
-	lstat(file, &lsstat);
-	mygroup = getgrgid(&lsstat->st_gid);
-	mypw = getpwuid(&lsstat->st_uid);
+	mygroup = getgrgid(lsstat.st_gid);
+	mypw = getpwuid(lsstat.st_uid);
 
 	/** calling necessary functions and printing all information asked for in ls */
 	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
-			(long)lsstat->st_ino,
-			(long)lsstat->st_blocks/2,
-			checkpermissions(&lsstat->st_mode),
-			(long)lsstat->st_nlink,
+			(long)lsstat.st_ino,
+			(long)lsstat.st_blocks/2,
+			checkpermissions(lsstat.st_mode),
+			(long)lsstat.st_nlink,
 			mypw->pw_name,
 			mygroup->gr_name,
-			modifytime(&lsstat->st_mtime), file);
+			modifytime(lsstat.st_mtime), file);
 
 	/* symbolic links */
-	if (S_ISLNK(lsstat->st_mode))
+	if (S_ISLNK(lsstat.st_mode))
 	{
 		char *link;
 		int len = 0;
