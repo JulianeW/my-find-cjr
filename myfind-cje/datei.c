@@ -194,40 +194,39 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[])
 
 void do_dir(const char * dir_name, const char * const * parms)
 {
-	 const int dirname_len = strlen(dirname);
-	    const struct dirent *dirent;
-	    DIR *dir = opendir(dirname);
-	    char *fullname = NULL;
-	    int fullname_size = 0;
+	 const int dir_length = strlen(dir_name);
+	 const struct dirent *dirent;
+	 DIR *dir = opendir(dir_name);
+	 char *fullname = NULL;
+	 int fullname_size = 0;
 
-	    if (dir == NULL)
-	    {
-	        fprintf(stderr, "%s: %s: %s\n", programname, dirname, strerror(errno));
-	        return;
-	    }
-	    while((dirent = readdir(dir)) != NULL)
-	    {
-	        int newlen;
-	        if (strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0)
-	        {
-	            continue;
-	        }
-	        newlen = dirname_len + 1 + strlen(dirent->d_name) + 1; /* a '/' and the terminating '\0' */
-	        if (newlen > fullname_size) {
-	            fullname_size = newlen;
-	            fullname = realloc(fullname, fullname_size);
-	            if (fullname == NULL) {
-	                fprintf(stderr, "Out of memory!\n");
-	                exit(1);
-	            }
+	 if (dir == NULL)
+	 {
+	     fprintf(stderr, "%s: %s: %s\n", prgname, dir_name, strerror(errno));
+	     return;
+	 }
+	 while((dirent = readdir(dir)) != NULL)
+	 {
+	     int newlen;
+	     if (strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0)
+	     {
+	         continue;
+	     }
+	     newlen = dirname_len + 1 + strlen(dirent->d_name) + 1; /* a '/' and the terminating '\0' */
+	     if (newlen > fullname_size) {
+	        fullname_size = newlen;
+	        fullname = realloc(fullname, fullname_size);
+	        if (fullname == NULL) {
+	           fprintf(stderr, "Out of memory!\n");
+	           exit(1);
+	           }
 	        }
 	        sprintf(fullname, "%s/%s", dirname, dirent->d_name);
-	        do_file(fullname, parms, parmcount);
+	        do_file(fullname, parms);
 	    }
 	    free(fullname);
 	    closedir(dir);
 	}
-
 
 }
 
