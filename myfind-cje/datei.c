@@ -88,9 +88,9 @@ int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat buffer);
 int check_user(const char * parms, struct stat buffer);
 long string_change(const char * value);
-void do_dir(const char * dir_name, const char * const * parms);
-void do_file(const char * dir_name, const char * const * parms);
-void check_file_parameter(char *parms[], int params_number, int *param_array[]);
+void do_dir(const char * dir_name, const char * parms);
+void do_file(const char * dir_name, const char * parms);
+void check_file_parameter(const char *parms, int params_number, int *param_array);
 
 
 /**
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	int param_array[params_number];
 	int i = 0;
 
-	check_file_parameter(argv, argc, &param_array);
+	check_file_parameter(argv, params_number, param_array);
 
 
 	if (argc == 1)
@@ -141,6 +141,8 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	do_file(dir_name, argv);
+
 
 	return EXIT_SUCCESS;
 }
@@ -159,7 +161,7 @@ int main(int argc, char* argv[])
  *
  */ 
  
-void check_file_parameter(char *parms[], int params_number, int *param_array[])
+void check_file_parameter(const char *parms, int params_number, int *param_array)
 {
 	int i = 1;
 
