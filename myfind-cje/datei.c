@@ -85,8 +85,8 @@ char *modifytime(time_t ftime);
 char *checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat buffer);
 int check_path(const char * parms, const char * dir_name);
-int check_no_user(struct stat statbuf);
-int check_user(const char * user, struct stat statbuf);
+int check_no_user(struct stat buffer);
+int check_user(const char * parms, struct stat buffer);
 long string_change(const char * value);
 void do_dir(const char * dir_name, const char * const * parms);
 void do_file(const char * dir_name, const char * const * parms);
@@ -106,6 +106,7 @@ void check_file_parameter(char *parms[], int params_number, int *param_array[]);
  * \retval 0 always
  *
  */
+
 int main(int argc, char* argv[])
 {
 	prgname = argv[0];
@@ -236,7 +237,6 @@ void do_dir(const char * dir_name, const char * const * parms)
  *
  * \brief
  *
- * @todo do_dir einbauen
  * @todo restliche Funktionen einbauen
  * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
  * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
@@ -244,10 +244,7 @@ void do_dir(const char * dir_name, const char * const * parms)
  *
  * \param *parms
  * \param dir_name
- * \param param_array
  *
- * \return 1 for successful match
- * \return 0 for unsuccesful match
  */
  
 void do_file(const char * dir_name, const char * const * parms)
@@ -265,7 +262,15 @@ void do_file(const char * dir_name, const char * const * parms)
 		{
 			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
 			{
-				/* enter USER FUNCTION */
+				if(check_user(parms[i+1], buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
+				{
+					i++;
+				}
+				else
+				{
+					not_found++;
+					i++;
+				}
 			}
 			else if(strcmp(parms[i], "-name") == 0)
 			{
@@ -280,6 +285,7 @@ void do_file(const char * dir_name, const char * const * parms)
 				else
 				{
 					not_found++;
+					i++;
 				}
 			}
 			else if(strcmp(parms[i], "-print") != 0)
@@ -292,7 +298,10 @@ void do_file(const char * dir_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
-				/* ENTER NOUSER FUNCTION */
+				if(check_no_user(buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
+				{
+					not_found++;
+				}
 			}
 			else if(strcmp(parms[i], "-path") == 0)
 			{
@@ -514,7 +523,7 @@ char * checkpermissions(mode_t st_mode)
  * @todo möglicherweise überprüfen, ob überhaupt ein valider Datentyp eingegeben wurde, bevor in Funktion gegangen wird?!
  *
  * \param *parms
- * \param stat statbuf
+ * \param stat buffer
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
@@ -590,30 +599,51 @@ int check_path(const char * parms, const char * dir_name)
 	}
 }
 
-int check_no_user(struct stat statbuf)
+/**
+ *
+ * \brief Function to check if file has no user
+ *
+ * \param buffer
+  *
+ * \return 1 for file without user
+ * \return 0 for unsuccessful match
+ */
+
+int check_no_user(struct stat buffer)
 {
-	if(getpwuid(statbuf.st_uid)==NULL)
+	if(getpwuid(buffer.st_uid)==NULL)
 		return 1;
 	else
 		return 0;
 }
 
-int check_user(const char * user, struct stat statbuf)
+/**
+ *
+ * \brief Function to check if valid username was given and if file is of this user
+ *
+ * \param *parms
+ * \param buffer
+ *
+ * \return 1 for successful match
+ * \return 0 for unsuccesful match
+ */
+
+int check_user(const char * parms, struct stat buffer)
 {
 	int i = 0;
 	int uid = 0;
-	int user_length = strlen(user);
+	int user_length = strlen(parms);
 
 	for(i=0; i<= user_length; i++)
 	{
-		if(!isdigit(user[i]))
+		if(!isdigit(parms[i]))
 			break; /* check nur Zahlen? */
 	}
 		if(i == user_length)
 		{
-			if((uid = string_change(user)) > -1)
+			if((uid = string_change(parms)) > -1)
 			{
-				if(uid == statbuf.st_uid) return 1;
+				if(uid == buffer.st_uid) return 1;
 			}
 			return 0;
 		}
@@ -622,12 +652,12 @@ int check_user(const char * user, struct stat statbuf)
 		{
 			struct passwd * userpwd;
 
-			if((userpwd = (user))==NULL)
+			if((userpwd = (parms))==NULL)
 				fprintf(stdout, "User not found.\n");
 
 			else
 			{
-				if(userpwd->pw_uid == statbuf.st_uid) return 1;
+				if(userpwd->pw_uid == buffer.st_uid) return 1;
 				else return 0;
 			}
 
@@ -636,6 +666,17 @@ int check_user(const char * user, struct stat statbuf)
 
 	return 0;
 }
+
+/**
+ *
+ * \brief Function
+ *
+ * @todo Beschreibung! Was macht diese Funktion?
+ * \param *value
+ *
+ * \return -1 for error
+ * \return lvalue for success
+ */
 
 long string_change(const char * value)
 {
