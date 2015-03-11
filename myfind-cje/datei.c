@@ -296,7 +296,7 @@ void do_file(const char * dir_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
-				/* ENTER LS FUNCTION */
+				ls(&dir_name);
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
@@ -353,16 +353,14 @@ void check_name(const char *file)
 	fprintf(stderr, "mystat() failed..\n");
 	fprintf(stderr, "Fehler: %s\n", strerror(errno));	
 	
-
-
 	exit(EXIT_FAILURE);
-	 }
+	}
 
 	
 	lstat(file, &mystat);
 	 
-	if (S_ISREG(mystat.st_mode)) printf("File: %s\n", file );
-	else if (S_ISDIR(mystat.st_mode)) printf("Directory: %s \n", file);
+	if (S_ISREG(mystat.st_mode)) printf("%s\n", file );
+	else if (S_ISDIR(mystat.st_mode)) printf("%s \n", file);
 
 }
 
@@ -396,6 +394,27 @@ void ls(const char *file)
 			mypw->pw_name,
 			mygroup->gr_name,
 			modifytime(&lsstat->st_mtime), file);
+
+	/* symbolic links */
+	if (S_ISLNK(lsstat->st_mode))
+	{
+		char *link;
+		int len = 0;
+
+		link = (char*) malloc(sizeof(char));
+		if (link == NULL)
+			{ printf("Allocation not possible.\n"); exit(1); }
+
+		if ((len = readlink(file, link, sizeof(link)-1)) != -1)
+		{
+	   		link[len] = '\0';
+			printf("%s", link);
+		}
+		else
+		{
+			fprintf(stderr, "%s\n", strerror(errno));
+		}
+	}
 
 }
 
