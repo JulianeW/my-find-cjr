@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	int i = 0;
 	int j = 0;
 
-	check_file_parameter(argv[], argc, &param_array);
+	check_file_parameter(argv, argc, &param_array);
 
 
   	
@@ -325,9 +325,9 @@ void do_file(const char * dir_name, const char * const * parms)
 		fprintf("%s\n", dir_name);
 	}
 
-
-
-	/* find some way to  check if directory and open do_dir */
+	/* check if directory and open directory */
+	if (S_ISDIR(buffer.st_mode))
+		do_dir(dir_name, parms);
 
 }
 
