@@ -77,7 +77,7 @@ static int params_number = 0;
  * ------------------------------------------------------------- prototypes--
  */
 
-void check_name(const char *file);
+void check_name(const char *parms, const char *file);
 void noparam(void);
 static void correctusage(void);
 void ls(const char *file, struct stat *lsstat);
@@ -90,6 +90,7 @@ int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
 void do_dir(const char * dir_name, const char * const * parms);
 void do_file(const char * file_name, const char * const * parms);
+static void p_print(const char *file_name);
 /* void check_file_parameter(const char *parms, int params_number, int *param_array); */
 
 
@@ -276,7 +277,7 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-name") == 0)
 			{
-				/* enter NAME FUNCTION */
+				check_name(parms[i], parms[i+1]);
 			}
 			else if(strcmp(parms[i], "-type") == 0)
 			{
@@ -292,7 +293,7 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-print") != 0)
 			{
-				not_found++; /* Ändern */
+				not_found++; p_print(file_name);
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
@@ -344,7 +345,7 @@ void do_file(const char * file_name, const char * const * parms)
  *
  */
 
-void check_name(const char *file)
+void check_name(const char *parms, const char *file)
 {
 
 	struct stat mystat;
@@ -362,7 +363,14 @@ void check_name(const char *file)
 	lstat(file, &mystat);
 	 
 	if (S_ISREG(mystat.st_mode)) printf("%s\n", file );
-	else if (S_ISDIR(mystat.st_mode)) printf("%s \n", file);
+	else if (S_ISDIR(mystat.st_mode))
+		{
+		printf("%s \n", file);
+		do_dir(file, parms);
+		}
+
+
+
 
 }
 
@@ -699,6 +707,11 @@ long string_change(const char * value)
 	if(lvalue < 0) return -1;
 
 	return lvalue;
+}
+
+static void p_print(const char *file_name)
+{
+	printf("%s", file_name);
 }
 
 
