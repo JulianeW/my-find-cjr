@@ -78,7 +78,6 @@ static int params_number = 0;
  */
 
 void check_name(const char *parms, const char *file);
-void noparam(void);
 static void correctusage(void);
 void ls(const char *file, struct stat *lsstat);
 char *modifytime(time_t ftime);
@@ -91,7 +90,7 @@ long string_change(const char * value);
 void do_dir(const char * dir_name, const char * const * parms);
 void do_file(const char * file_name, const char * const * parms);
 static void p_print(const char *file_name);
-/* void check_file_parameter(const char *parms, int params_number, int *param_array); */
+
 
 
 /**
@@ -113,7 +112,6 @@ int main(int argc, char* argv[])
 	prgname = argv[0];
 	params_number = argc-1;
 	const char * dir_name = "."; /* current directory is used when no directory is entered */
-	int param_array[params_number];
 	int i = 0;
 
 	/* check_file_parameter(argv, params_number, param_array); */
@@ -121,7 +119,7 @@ int main(int argc, char* argv[])
 
 	if (argc == 1)
 	{
-		noparam();
+		correctusage();
 	}
 	else if (argc == 2)
 	{
@@ -142,7 +140,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	do_file(dir_name, argv);
 
 
 	return EXIT_SUCCESS;
@@ -152,15 +149,7 @@ int main(int argc, char* argv[])
  * ------------------------------------------------------------- functions --
  */
  
-/**
- *
- * \brief Function to check what kind of parameter is used
- *
- * \param *parms[]
- * \param params_number
- * \param *param_array
- *
- */ 
+
  
 /* void check_file_parameter(const char *parms, int params_number, int *param_array)
 {
@@ -200,11 +189,8 @@ int main(int argc, char* argv[])
 
 void do_dir(const char * dir_name, const char * const * parms)
 {
-	 const int dir_length = strlen(dir_name);
-	 const struct dirent *dirent;
+	 const struct dirent *d;
 	 DIR *dir = opendir(dir_name);
-	 char *comp_name = NULL;
-	 int comp_size = 0;
 
 	 if (dir == NULL)
 	 {
@@ -212,26 +198,22 @@ void do_dir(const char * dir_name, const char * const * parms)
 	     return;
 	 }
 
-	 while((dirent = readdir(dir)) != NULL)
+	 while((d = readdir(dir)) != NULL)
 	 {
-	     int new_length;
-	     if (strcmp(dirent->d_name, ".") == 0 || strcmp(dirent->d_name, "..") == 0)
+	     if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
 	     {
 	         continue;
 	     }
-	     new_length = dir_length + 1 + strlen(dirent->d_name) + 1; /* including the terminating '\0' */
-	     if (new_length > comp_size) {
-	        comp_size = new_length;
-	        comp_name = realloc(comp_name, comp_size);
-	        if (comp_name == NULL) {
-	           fprintf(stderr, "Out of memory!\n");
-	           exit(1);
-	           }
-	        }
-	        sprintf(comp_name, "%s/%s", dir_name, dirent->d_name);
-	        do_file(comp_name, parms);
+
+	     printf("%s\n",(*d).d_name);
+
+	     		if(fnmatch(dir_name,(*d).d_name,FNM_NOESCAPE) == 0)
+	     		{
+	     			printf("%s\n",(*d).d_name);
+	     		}
+
+	        do_file(dir_name, parms);
 	    }
-	    free(comp_name);
 	    closedir(dir);
 	}
 
@@ -428,13 +410,6 @@ void ls(const char *file, struct stat *lsstat)
 
 }
 
-void noparam(void)
-{
-	/** if no parameter is given, the current directory with subdirectory is printeed */
-	/** INSERT print function */
-
-
-}
 
 /**
  *
