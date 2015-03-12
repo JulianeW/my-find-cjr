@@ -80,13 +80,13 @@ static int params_number = 0;
 void check_name(const char *file);
 void noparam(void);
 static void correctusage(void);
-void ls(const char *file, struct stat lsstat);
+void ls(const char *file, struct stat *lsstat);
 char *modifytime(time_t ftime);
 char *checkpermissions(mode_t st_mode);
-int check_type(const char * parms, struct stat buffer);
+int check_type(const char * parms, struct stat * buffer);
 int check_path(const char * parms, const char * dir_name);
-int check_no_user(struct stat buffer);
-int check_user(const char * parms, struct stat buffer);
+int check_no_user(struct stat *buffer);
+int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
 void do_dir(const char * dir_name, const char * const * parms);
 void do_file(const char * file_name, const char * const * parms);
@@ -252,7 +252,7 @@ void do_dir(const char * dir_name, const char * const * parms)
 void do_file(const char * file_name, const char * const * parms)
 {
 	int i = 0;
-	struct stat buffer; /* new structure for lstat */
+	struct stat *buffer; /* new structure for lstat */
 	int not_found = 0;
 
 	if(parms[1][0] == "-") i = 1;
@@ -264,7 +264,7 @@ void do_file(const char * file_name, const char * const * parms)
 		{
 			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
 			{
-				if(check_user(parms[i+1], buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
+				if(check_user(parms[i+1], &buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
 				{
 					i++;
 				}
@@ -280,7 +280,7 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-type") == 0)
 			{
-				if(check_type(parms[i+1], buffer) == 1) /* Parameter nach path wird überprüft */
+				if(check_type(parms[i+1], &buffer) == 1) /* Parameter nach path wird überprüft */
 				{
 					i++; /* spring zum nächsten - */
 				}
@@ -296,11 +296,11 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
-				ls(file_name, buffer);
+				ls(file_name, &buffer);
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
-				if(check_no_user(buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
+				if(check_no_user(&buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
 				{
 					not_found++;
 				}
@@ -329,7 +329,7 @@ void do_file(const char * file_name, const char * const * parms)
 	}
 
 	/* check if directory and open directory */
-	if (S_ISDIR(buffer.st_mode))
+	if (S_ISDIR(buffer->st_mode))
 		do_dir(file_name, parms);
 
 }
@@ -374,7 +374,7 @@ void check_name(const char *file)
  *
  */
 
-void ls(const char *file, struct stat lsstat)
+void ls(const char *file, struct stat *lsstat)
 {
 
 	/** necessary structs for all information needed in ls */
@@ -382,21 +382,21 @@ void ls(const char *file, struct stat lsstat)
 	struct passwd *mypw;
 
 	/** filling structs with the file information and getting owner and group information */
-	mygroup = getgrgid(lsstat.st_gid);
-	mypw = getpwuid(lsstat.st_uid);
+	mygroup = getgrgid(lsstat->st_gid);
+	mypw = getpwuid(lsstat->st_uid);
 
 	/** calling necessary functions and printing all information asked for in ls */
 	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
-			(long)lsstat.st_ino,
-			(long)lsstat.st_blocks/2,
-			checkpermissions(lsstat.st_mode),
-			(long)lsstat.st_nlink,
+			(long)lsstat->st_ino,
+			(long)lsstat->st_blocks/2,
+			checkpermissions(lsstat->st_mode),
+			(long)lsstat->st_nlink,
 			mypw->pw_name,
 			mygroup->gr_name,
-			modifytime(lsstat.st_mtime), file);
+			modifytime(lsstat->st_mtime), file);
 
 	/* symbolic links */
-	if (S_ISLNK(lsstat.st_mode))
+	if (S_ISLNK(lsstat->st_mode))
 	{
 		char *link;
 		int len = 0;
@@ -531,7 +531,7 @@ char * checkpermissions(mode_t st_mode)
  * \return 0 for unsuccesful match
  */
 
-int check_type(const char * parms, struct stat buffer)
+int check_type(const char * parms, struct stat *buffer)
 {
 
 	char *type_chars = "bcdpfls"; /* bcdpfls represent the first letter of the valid types that can be found with myfind/find */
@@ -542,19 +542,19 @@ int check_type(const char * parms, struct stat buffer)
 
 	if (strlen(parms) == 1 && (help_chars != NULL))
 	{
-		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer.st_mode))
+		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "c") == 0 && S_ISCHR(buffer.st_mode))
+		else if (strcmp(parms, "c") == 0 && S_ISCHR(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "d") == 0 && S_ISDIR(buffer.st_mode))
+		else if (strcmp(parms, "d") == 0 && S_ISDIR(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "f") == 0 && S_ISREG(buffer.st_mode))
+		else if (strcmp(parms, "f") == 0 && S_ISREG(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "l") == 0 && S_ISLNK(buffer.st_mode))
+		else if (strcmp(parms, "l") == 0 && S_ISLNK(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "p") == 0 && S_ISFIFO(buffer.st_mode))
+		else if (strcmp(parms, "p") == 0 && S_ISFIFO(buffer->st_mode))
 			return 1;
-		else if (strcmp(parms, "s") == 0 && S_ISSOCK(buffer.st_mode))
+		else if (strcmp(parms, "s") == 0 && S_ISSOCK(buffer->st_mode))
 			return 1;
 		else
 			return 0;
@@ -611,9 +611,9 @@ int check_path(const char * parms, const char * dir_name)
  * \return 0 for unsuccessful match
  */
 
-int check_no_user(struct stat buffer)
+int check_no_user(struct stat *buffer)
 {
-	if(getpwuid(buffer.st_uid)==NULL)
+	if(getpwuid(buffer->st_uid)==NULL)
 		return 1;
 	else
 		return 0;
@@ -630,7 +630,7 @@ int check_no_user(struct stat buffer)
  * \return 0 for unsuccesful match
  */
 
-int check_user(const char * parms, struct stat buffer)
+int check_user(const char * parms, struct stat *buffer)
 {
 	int i = 0;
 	int uid = 0;
@@ -645,7 +645,7 @@ int check_user(const char * parms, struct stat buffer)
 		{
 			if((uid = string_change(parms)) > -1)
 			{
-				if(uid == buffer.st_uid) return 1;
+				if(uid == buffer->st_uid) return 1;
 			}
 			return 0;
 		}
@@ -659,7 +659,7 @@ int check_user(const char * parms, struct stat buffer)
 
 			else
 			{
-				if(userpwd->pw_uid == buffer.st_uid) return 1;
+				if(userpwd->pw_uid == buffer->st_uid) return 1;
 				else return 0;
 			}
 
