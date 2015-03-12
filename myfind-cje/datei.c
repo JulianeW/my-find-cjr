@@ -88,9 +88,9 @@ int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat buffer);
 int check_user(const char * parms, struct stat buffer);
 long string_change(const char * value);
-void do_dir(const char * dir_name, const char * parms);
-void do_file(const char * dir_name, const char * parms);
-void check_file_parameter(const char *parms, int params_number, int *param_array);
+void do_dir(const char * dir_name, const char * const * parms);
+void do_file(const char * file_name, const char * const * parms);
+/* void check_file_parameter(const char *parms, int params_number, int *param_array); */
 
 
 /**
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	int param_array[params_number];
 	int i = 0;
 
-	check_file_parameter(argv, params_number, param_array);
+	/* check_file_parameter(argv, params_number, param_array); */
 
 
 	if (argc == 1)
@@ -161,11 +161,11 @@ int main(int argc, char* argv[])
  *
  */ 
  
-void check_file_parameter(const char *parms, int params_number, int *param_array)
+/* void check_file_parameter(const char *parms, int params_number, int *param_array)
 {
 	int i = 1;
 
-	if(strcmp(&parms[i][0], "-") == 0)
+	if(strcmp(parms[i][0], "-") == 0)
 	{
 		for(i = 1; i <= params_number; i++)
 		{
@@ -186,7 +186,7 @@ void check_file_parameter(const char *parms, int params_number, int *param_array
 	}
 	else *param_array[i-1] = 7;
 
-}
+} */
 
 /**
  *
@@ -249,7 +249,7 @@ void do_dir(const char * dir_name, const char * const * parms)
  *
  */
  
-void do_file(const char * dir_name, const char * const * parms)
+void do_file(const char * file_name, const char * const * parms)
 {
 	int i = 0;
 	struct stat buffer; /* new structure for lstat */
@@ -260,7 +260,7 @@ void do_file(const char * dir_name, const char * const * parms)
 
 	for(;i <= params_number; i++)
 	{
-		if(lstat(dir_name, &buffer) == 0) /** lstat: on success, zero is returned */
+		if(lstat(file_name, &buffer) == 0) /** lstat: on success, zero is returned */
 		{
 			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
 			{
@@ -296,7 +296,7 @@ void do_file(const char * dir_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
-				ls(dir_name, buffer);
+				ls(file_name, buffer);
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
@@ -307,7 +307,7 @@ void do_file(const char * dir_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-path") == 0)
 			{
-				if(check_path(parms[i+1], dir_name) == 1) /* Parameter nach path wird überprüft */
+				if(check_path(parms[i+1], file_name) == 1) /* Parameter nach path wird überprüft */
 				{
 					i++;
 				}
@@ -325,12 +325,12 @@ void do_file(const char * dir_name, const char * const * parms)
 
 	if (not_found == 0) /* 0: alle Parameter gefunden */
 	{
-		printf("%s\n", dir_name);
+		printf("%s\n", file_name);
 	}
 
 	/* check if directory and open directory */
 	if (S_ISDIR(buffer.st_mode))
-		do_dir(dir_name, parms);
+		do_dir(file_name, parms);
 
 }
 
