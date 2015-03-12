@@ -50,12 +50,13 @@
 #include <grp.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <ctype.h>
 
 /** ---------------------------------------------- typedefs--
  *
  */
 
-/*
+
 typedef enum {
 	NAME,
 	USER,
@@ -66,7 +67,13 @@ typedef enum {
 	PATH,
 	ARGUMENT
 } Parameter;
-*/
+
+
+typedef struct parms
+{	Parameter predicate;
+	char * pattern;
+	struct parms *next;
+} parms;
 
 /*
  * --------------------------------------------------------------- globals --
@@ -78,7 +85,7 @@ static int params_number = 0;
  * ------------------------------------------------------------- prototypes--
  */
 
-void check_name(const char *parms, const char *file);
+int check_name(const char *file, const char * pattern);
 static void correctusage(void);
 void ls(const char *file, struct stat *lsstat);
 char *modifytime(time_t ftime);
@@ -88,10 +95,11 @@ int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat *buffer);
 int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
-void do_dir(const char * dir_name, const char * const * parms);
+void do_dir(const char * dir_name, parms *used_parms);
 void do_file(const char * file_name, const char * const * parms);
 static void p_print(const char *file_name);
-int is_dir (char * path);
+int is_dir (const char * path);
+parms * check_parameter(int argc, char * argv[]);
 
 
 
@@ -111,11 +119,10 @@ int is_dir (char * path);
 
 int main(int argc, char* argv[])
 {
-	prgname = argv[0];
+	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
 	params_number = argc-1;
 	const char * dir_name = "."; /* current directory is used when no directory is entered */
-	int i = 0;
-	struct stat mystat;
+	parms *used_parms;
 
 
 	/* check_file_parameter(argv, params_number, param_array); */
@@ -126,21 +133,29 @@ int main(int argc, char* argv[])
 		correctusage();
 		exit(1);
 	}
-	else if (argc == 2)
+	else if (argc > 1)
 	{
-		if (is_dir(argv[1]))
-				printf("Directory");
-		else printf("No Directory");
-	}
 
-	/* for (i = 1; i < argc; i++)
-	{
-		if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "help") == 0)
+		used_parms = check_parameter(argc, argv);
+		if (used_parms == NULL)
 		{
+			printf("No Parameter found.\n");
 			correctusage();
 			exit(1);
 		}
-	} */
+
+
+		if (is_dir(argv[1]))
+		{
+			printf("directory\n");
+			do_dir(argv[1], used_parms);
+		}
+		else printf("No Directory\n");
+	}
+
+
+
+
 
 	return EXIT_SUCCESS;
 }
@@ -149,34 +164,6 @@ int main(int argc, char* argv[])
  * ------------------------------------------------------------- functions --
  */
  
-
- 
-/* void check_file_parameter(const char *parms, int params_number, int *param_array)
-{
-	int i = 1;
-
-	if(strcmp(parms[i][0], "-") == 0)
-	{
-		for(i = 1; i <= params_number; i++)
-		{
-
-			if(strcmp(parms[i], "-name") == 0) *param_array[i-1] = 0;
-			else if (strcmp(parms[i], "-user") == 0) *param_array[i-1] = 1;
-			else if(strcmp(parms[i], "-type") == 0) *param_array[i-1] = 2;
-			else if(strcmp(parms[i], "-print") == 0) *param_array[i-1] = 3;
-			else if(strcmp(parms[i], "-ls") == 0) *param_array[i-1] = 4;
-			else if(strcmp(parms[i], "-nouser") == 0) *param_array[i-1] = 5;
-			else if(strcmp(parms[i], "-path") == 0) *param_array[i-1] = 6;
-			else
-			{
-				correctusage();
-				exit(1);
-			}
-		}
-	}
-	else *param_array[i-1] = 7;
-
-} */
 
 /**
  *
@@ -187,10 +174,79 @@ int main(int argc, char* argv[])
  *
  */
 
-void do_dir(const char * dir_name, const char * const * parms)
+parms * check_parameter(int argc, char * argv[])
+{
+
+	parms *current = NULL;
+	parms *start = NULL;
+	parms *new = NULL;
+
+	int i = 2;
+
+	for (; i < argc; i++)
+	{
+		if (strncmp(argv[i], "-name", 5) == 0)
+		{
+			/* Increment da Name für Analyse übergeben werden muss */
+			i++;
+			new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = NAME;
+			new->pattern = argv[i];
+		}
+		else if (strncmp(argv[i], "-ls", 3) == 0)
+		{
+			new = (parms *) malloc(sizeof(parms));
+				if (start == NULL)
+				{
+					start = new;
+					current = new;
+				}
+				else
+				{
+					current->next = new;
+					current = new;
+				}
+				new->predicate = LS;
+		}
+
+		else if (strncmp(argv[i], "-print", 6) == 0)
+		{	new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = PRINT;
+		}
+		else
+			return NULL;
+	}
+
+	return start;
+
+
+}
+
+void do_dir(const char * dir_name, parms *used_parms)
 {
 	 const struct dirent *d;
 	 DIR *dir = opendir(dir_name);
+	 char path[PATH_MAX];
 
 	 if (dir == NULL)
 	 {
@@ -207,15 +263,14 @@ void do_dir(const char * dir_name, const char * const * parms)
 
 	     printf("%s\n",(*d).d_name);
 
+	     if (is_dir(dir_name))
+	     {
+	    	snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
+	    	do_dir(path, used_parms);
+	     }
 
+	     else printf("File: %s\n", dir_name);
 
-	     		if(fnmatch(dir_name,(*d).d_name,FNM_NOESCAPE) == 0)
-	     		{
-	     			printf("%s\n",(*d).d_name);
-	     		}
-
-	     /* check if dir or file */
-	        do_file(dir_name, parms);
 	  }
 
    closedir(dir);
@@ -239,7 +294,7 @@ void do_dir(const char * dir_name, const char * const * parms)
 void do_file(const char * file_name, const char * const * parms)
 {
 	int i = 0;
-	struct stat *buffer; /* new structure for lstat */
+	struct stat *buffer = NULL; /* new structure for lstat */
 	int not_found = 0;
 
 	if(parms[1][0] == "-") i = 1;
@@ -247,11 +302,11 @@ void do_file(const char * file_name, const char * const * parms)
 
 	for(;i <= params_number; i++)
 	{
-		if(lstat(file_name, &buffer) == 0) /** lstat: on success, zero is returned */
+		if(lstat(file_name, buffer) == 0) /** lstat: on success, zero is returned */
 		{
 			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
 			{
-				if(check_user(parms[i+1], &buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
+				if(check_user(parms[i+1], buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
 				{
 					i++;
 				}
@@ -263,11 +318,11 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-name") == 0)
 			{
-				check_name(parms[i], parms[i+1]);
+
 			}
 			else if(strcmp(parms[i], "-type") == 0)
 			{
-				if(check_type(parms[i+1], &buffer) == 1) /* Parameter nach path wird überprüft */
+				if(check_type(parms[i+1], buffer) == 1) /* Parameter nach path wird überprüft */
 				{
 					i++; /* spring zum nächsten - */
 				}
@@ -283,11 +338,11 @@ void do_file(const char * file_name, const char * const * parms)
 			}
 			else if(strcmp(parms[i], "-ls") == 0)
 			{
-				ls(file_name, &buffer);
+				ls(file_name, buffer);
 			}
 			else if(strcmp(parms[i], "-nosuer")== 0)
 			{
-				if(check_no_user(&buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
+				if(check_no_user(buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
 				{
 					not_found++;
 				}
@@ -315,9 +370,6 @@ void do_file(const char * file_name, const char * const * parms)
 		printf("%s\n", file_name);
 	}
 
-	/* check if directory and open directory */
-	if (S_ISDIR(buffer->st_mode))
-		do_dir(file_name, parms);
 
 }
 
@@ -331,31 +383,12 @@ void do_file(const char * file_name, const char * const * parms)
  *
  */
 
-void check_name(const char *parms, const char *file)
+int check_name(const char *file, const char * pattern)
 {
-
-	struct stat *mystat;
-
-	/* Fehlerbehandlung und Fehlerausgabe über errno */
-	if(lstat(file, mystat) == -1)
-	{
-	fprintf(stderr, "mystat() failed..\n");
-	fprintf(stderr, "Fehler: %s\n", strerror(errno));	
-	
-	exit(EXIT_FAILURE);
-	}
-
-	
-	lstat(file, mystat);
-	 
-	if (S_ISREG(mystat->st_mode)) printf("%s\n", file );
-	else if (S_ISDIR(mystat->st_mode))
-		{
-		printf("%s \n", file);
-		do_dir(file, parms);
-		}
+	return 1;
 
 }
+
 
 /**
  *
@@ -552,12 +585,12 @@ int check_type(const char * parms, struct stat *buffer)
 	}
 }
 
-int is_dir (char * path)
+int is_dir (const char * path)
 {
-	struct stat *mystat;
-	lstat(path, mystat);
+	struct stat mystat;
+	lstat(path, &mystat);
 
-	if(S_ISDIR(mystat->st_mode))
+	if(S_ISDIR(mystat.st_mode))
 		return 1;
 	return 0;
 }
