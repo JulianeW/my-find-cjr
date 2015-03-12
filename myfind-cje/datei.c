@@ -96,8 +96,8 @@ int check_no_user(struct stat *buffer);
 int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
 void do_dir(const char * dir_name, parms *used_parms);
-void do_file(const char * file_name, const char * const * parms);
-static void p_print(const char *file_name);
+void do_file(const char * file_name, parms *used_params);
+int p_print(const char *file_name);
 int is_dir (const char * path);
 parms * check_parameter(int argc, char * argv[]);
 
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 			printf("directory\n");
 			do_dir(argv[1], used_parms);
 		}
-		else printf("No Directory\n");
+		else do_file(argv[1], used_parms);
 	}
 
 
@@ -237,6 +237,22 @@ parms * check_parameter(int argc, char * argv[])
 			return NULL;
 	}
 
+	if (start == NULL)
+	{
+		new = (parms *) malloc(sizeof(parms));
+		if (start == NULL)
+		{
+			start = new;
+			current = new;
+		}
+		else
+		{
+			current->next = new;
+			current = new;
+		}
+		new->predicate = PRINT;
+	}
+
 	return start;
 
 
@@ -261,15 +277,14 @@ void do_dir(const char * dir_name, parms *used_parms)
 	         continue;
 	     }
 
-	     printf("%s\n",(*d).d_name);
+	     snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
 
 	     if (is_dir(dir_name))
 	     {
-	    	snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
-	    	do_dir(path, used_parms);
+	       	do_dir(path, used_parms);
 	     }
 
-	     else printf("File: %s\n", dir_name);
+	     else do_file(path, used_parms);
 
 	  }
 
@@ -291,85 +306,33 @@ void do_dir(const char * dir_name, parms *used_parms)
  *
  */
  
-void do_file(const char * file_name, const char * const * parms)
+void do_file(const char * file_name, parms *used_params)
 {
-	int i = 0;
-	struct stat *buffer = NULL; /* new structure for lstat */
-	int not_found = 0;
+	parms *current_param = used_params;
+	int success = 1;
 
-	if(parms[1][0] == "-") i = 1;
-	else i = 2;
-
-	for(;i <= params_number; i++)
+	while (current_param != NULL && success == 1)
 	{
-		if(lstat(file_name, buffer) == 0) /** lstat: on success, zero is returned */
+		switch(current_param->predicate)
 		{
-			if(strcmp(parms[i], "-user") == 0) /* strcmp: on success, zero is returned */
+			case NAME:
 			{
-				if(check_user(parms[i+1], buffer) == 1) /* Nächster Parameter sollte den usernamen enthalten */
-				{
-					i++;
-				}
-				else
-				{
-					not_found++;
-					i++;
-				}
+				printf("Name übergeben.\n");/* Call Check_name */
+				success = check_name(file_name, current_param->pattern);
+				break;
 			}
-			else if(strcmp(parms[i], "-name") == 0)
+			case PRINT:
 			{
+				success = p_print(file_name);
+				break;
 
 			}
-			else if(strcmp(parms[i], "-type") == 0)
-			{
-				if(check_type(parms[i+1], buffer) == 1) /* Parameter nach path wird überprüft */
-				{
-					i++; /* spring zum nächsten - */
-				}
-				else
-				{
-					not_found++;
-					i++;
-				}
-			}
-			else if(strcmp(parms[i], "-print") != 0)
-			{
-				not_found++; p_print(file_name);
-			}
-			else if(strcmp(parms[i], "-ls") == 0)
-			{
-				ls(file_name, buffer);
-			}
-			else if(strcmp(parms[i], "-nosuer")== 0)
-			{
-				if(check_no_user(buffer) == 0) /* keine Parameter werden benötigt, keine Ausgabe wenn 0 */
-				{
-					not_found++;
-				}
-			}
-			else if(strcmp(parms[i], "-path") == 0)
-			{
-				if(check_path(parms[i+1], file_name) == 1) /* Parameter nach path wird überprüft */
-				{
-					i++;
-				}
-				else
-				{
-					not_found++;
-				}
-			}
-			}
-			else
-			{
-				/* some kind of error handling */
-			}
+			default: printf("Unknown predicate.\n");
+
 		}
+		current_param = current_param->next;
 
-	if (not_found == 0) /* 0: alle Parameter gefunden */
-	{
-		printf("%s\n", file_name);
 	}
-
 
 }
 
@@ -385,6 +348,7 @@ void do_file(const char * file_name, const char * const * parms)
 
 int check_name(const char *file, const char * pattern)
 {
+	printf("Ich checke pattern: %s.\n", pattern);
 	return 1;
 
 }
@@ -727,10 +691,10 @@ long string_change(const char * value)
 
 	return lvalue;
 }
-
-static void p_print(const char *file_name)
+int p_print(const char *file_name)
 {
 	printf("%s", file_name);
+	return 1;
 }
 
 
