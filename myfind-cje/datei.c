@@ -80,6 +80,7 @@ typedef struct parms
  */
 const char *prgname = NULL;
 static int params_number = 0;
+static const char * type_possibilities = "bscdlfps";
 
 /*
  * ------------------------------------------------------------- prototypes--
@@ -87,9 +88,9 @@ static int params_number = 0;
 
 int check_name(const char *file, const char * pattern);
 static void correctusage(void);
-void ls(const char *file, struct stat *lsstat);
-char *modifytime(time_t ftime);
-char *checkpermissions(mode_t st_mode);
+void ls(const char *file);
+char * modifytime(time_t ftime);
+char * checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat * buffer);
 int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat *buffer);
@@ -177,17 +178,19 @@ int main(int argc, char* argv[])
 parms * check_parameter(int argc, char * argv[])
 {
 
+	/* Initialise Pointer for linked list */
 	parms *current = NULL;
 	parms *start = NULL;
 	parms *new = NULL;
 
+	/* Zählvariable i = 2 da erst bei argc = 2 die Parameterübergaben beginnen */
 	int i = 2;
 
 	for (; i < argc; i++)
 	{
 		if (strncmp(argv[i], "-name", 5) == 0)
 		{
-			/* Increment da Name für Analyse übergeben werden muss */
+			/* Increment i as parameter is needed to check with name */
 			i++;
 			new = (parms *) malloc(sizeof(parms));
 			if (start == NULL)
@@ -201,6 +204,11 @@ parms * check_parameter(int argc, char * argv[])
 				current = new;
 			}
 			new->predicate = NAME;
+			if (argv[i] == NULL)
+			{
+				printf("Missing argument.");
+				exit(1);
+			}
 			new->pattern = argv[i];
 		}
 		else if (strncmp(argv[i], "-ls", 3) == 0)
@@ -220,7 +228,8 @@ parms * check_parameter(int argc, char * argv[])
 		}
 
 		else if (strncmp(argv[i], "-print", 6) == 0)
-		{	new = (parms *) malloc(sizeof(parms));
+		{
+			new = (parms *) malloc(sizeof(parms));
 			if (start == NULL)
 			{
 				start = new;
@@ -232,6 +241,95 @@ parms * check_parameter(int argc, char * argv[])
 				current = new;
 			}
 			new->predicate = PRINT;
+		}
+		else if (strncmp(argv[i], "-user", 5) == 0)
+		{
+			/* Increment i as parameter is needed to check user and saved in the structure */
+			i++;
+			new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = USER;
+			if (argv[i] == NULL)
+			{
+				printf("Missing argument.");
+				exit(1);
+			}
+			new->pattern = argv[i];
+		}
+		else if (strncmp(argv[i], "-nouser", 7) == 0)
+		{
+			new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = NOUSER;
+		}
+		else if (strncmp(argv[i], "-path", 5) == 0)
+		{
+			/* Increment i as path is needed to be compared */
+			i++;
+			new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = PATH;
+			if (argv[i] == NULL)
+			{
+				printf("Missing argument.");
+				exit(1);
+			}
+			new->pattern = argv[i];
+		}
+		else if (strncmp(argv[i], "-type", 5) == 0)
+		{
+			/* Increment i as type is needed to check against the file type */
+			i++;
+			new = (parms *) malloc(sizeof(parms));
+			if (start == NULL)
+			{
+				start = new;
+				current = new;
+			}
+			else
+			{
+				current->next = new;
+				current = new;
+			}
+			new->predicate = TYPE;
+			if (strlen(argv[i] == 1 && (NULL == strchr(type_possibilities, argv[i]))))
+			{
+					printf("wrong argument");
+					return EXIT_FAILURE;
+			}
+			if (argv[i] == NULL)
+			{
+				printf("Missing argument.");
+				exit(1);
+			}
+			new->pattern = argv[i];
 		}
 		else
 			return NULL;
@@ -254,7 +352,6 @@ parms * check_parameter(int argc, char * argv[])
 	}
 
 	return start;
-
 
 }
 
@@ -310,6 +407,8 @@ void do_file(const char * file_name, parms *used_params)
 {
 	parms *current_param = used_params;
 	int success = 1;
+	struct stat current_file;
+	lstat(file_name, &current_file);
 
 	while (current_param != NULL && success == 1)
 	{
@@ -326,6 +425,30 @@ void do_file(const char * file_name, parms *used_params)
 				success = p_print(file_name);
 				break;
 
+			}
+			case LS:
+			{
+				printf("LS uebergeben\n");
+				ls(file_name);
+				break;
+			}
+			case TYPE:
+			{
+				check_type(current_param->pattern, &current_file);
+				printf("Type übergeben\n");
+				break;
+			}
+			case NOUSER:
+			{
+				check_no_user(&current_file);
+				printf("User übergeben\n");
+				break;
+			}
+			case PATH:
+			{
+				printf("Path übergeben\n");
+				check_path(current_param->pattern, file_name);
+				break;
 			}
 			default: printf("Unknown predicate.\n");
 
@@ -348,8 +471,12 @@ void do_file(const char * file_name, parms *used_params)
 
 int check_name(const char *file, const char * pattern)
 {
-	printf("Ich checke pattern: %s.\n", pattern);
-	return 1;
+	/* file = basename(file); */
+	int success = 0;
+
+	success = fnmatch(file, pattern, 0);
+
+	return success;
 
 }
 
@@ -362,14 +489,16 @@ int check_name(const char *file, const char * pattern)
  *
  */
 
-void ls(const char *file, struct stat *lsstat)
+void ls(const char *file)
 {
 
-	/** necessary structs for all information needed in ls */
-	struct group *mygroup;
-	struct passwd *mypw;
+	/* necessary structs for all information needed in ls */
+	struct stat *lsstat = NULL;
+	lstat(file, lsstat);
+	struct group *mygroup = NULL;
+	struct passwd *mypw = NULL;
 
-	/** filling structs with the file information and getting owner and group information */
+	/* filling structs with the file information and getting owner and group information */
 	mygroup = getgrgid(lsstat->st_gid);
 	mypw = getpwuid(lsstat->st_uid);
 
@@ -384,6 +513,7 @@ void ls(const char *file, struct stat *lsstat)
 			modifytime(lsstat->st_mtime), file);
 
 	/* symbolic links */
+#if 0
 	if (S_ISLNK(lsstat->st_mode))
 	{
 		char *link;
@@ -405,7 +535,7 @@ void ls(const char *file, struct stat *lsstat)
 
 		free(link);
 	}
-
+#endif
 }
 
 
@@ -417,7 +547,7 @@ void ls(const char *file, struct stat *lsstat)
  *
  */
 
-char *modifytime(time_t ftime)
+char * modifytime(time_t ftime)
 {
 	struct tm *time;
 	static char filetime[30];
@@ -432,9 +562,7 @@ char *modifytime(time_t ftime)
 
 static void correctusage(void)
 {
-	printf("Correct use of: %s\n"
-			"-user: searches entries of certain users\n"
-			"-name: searches entries with a given name\n"
+	printf("Correct use of: %s\n -user: searches entries of certain users\n -name: searches entries with a given name\n"
 			"-type (bcdpfls): searches for certain type"
 			"-print: prints name of entry"
 			"-ls: prints certain information of file"
@@ -515,14 +643,7 @@ char * checkpermissions(mode_t st_mode)
 int check_type(const char * parms, struct stat *buffer)
 {
 
-	char *type_chars = "bcdpfls"; /* bcdpfls represent the first letter of the valid types that can be found with myfind/find */
-	char *help_chars = NULL; /* used for strchr */
 
-	help_chars = strchr(type_chars, parms[0]); /* The strchr() function returns a pointer to the first occurrence of
-		the character c in the string s. It returns a pointer to the matched character or NULL if the character is not found. */
-
-	if (strlen(parms) == 1 && (help_chars != NULL))
-	{
 		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer->st_mode))
 			return 1;
 		else if (strcmp(parms, "c") == 0 && S_ISCHR(buffer->st_mode))
@@ -539,14 +660,8 @@ int check_type(const char * parms, struct stat *buffer)
 			return 1;
 		else
 			return 0;
-	}
-	else
-	{
 
-		fprintf(stderr, "find: Unknown argument to -type: %s\n", parms);
-		exit(EXIT_FAILURE);
 
-	}
 }
 
 int is_dir (const char * path)
@@ -691,6 +806,16 @@ long string_change(const char * value)
 
 	return lvalue;
 }
+
+/**
+ *
+ * \brief Function to check what kind of parameter is used
+ *
+ * \param *file_name
+ * return 1 on succes
+ *
+ */
+
 int p_print(const char *file_name)
 {
 	printf("%s", file_name);
