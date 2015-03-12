@@ -55,6 +55,7 @@
  *
  */
 
+/*
 typedef enum {
 	NAME,
 	USER,
@@ -65,7 +66,7 @@ typedef enum {
 	PATH,
 	ARGUMENT
 } Parameter;
-
+*/
 
 /*
  * --------------------------------------------------------------- globals --
@@ -90,6 +91,7 @@ long string_change(const char * value);
 void do_dir(const char * dir_name, const char * const * parms);
 void do_file(const char * file_name, const char * const * parms);
 static void p_print(const char *file_name);
+int is_dir (char * path);
 
 
 
@@ -113,6 +115,8 @@ int main(int argc, char* argv[])
 	params_number = argc-1;
 	const char * dir_name = "."; /* current directory is used when no directory is entered */
 	int i = 0;
+	struct stat mystat;
+
 
 	/* check_file_parameter(argv, params_number, param_array); */
 
@@ -120,27 +124,23 @@ int main(int argc, char* argv[])
 	if (argc == 1)
 	{
 		correctusage();
+		exit(1);
 	}
 	else if (argc == 2)
 	{
-		if (argv[2] == 0)/* (argv[2] != '-print')*/
-			correctusage();
-		else /* es werden alle Einträge des aktuellen Directories ausgegeben*/
-
-		/* fprintf(stderr, "zu wenig Argumente..\n"); */
-		return EXIT_FAILURE;
+		if (is_dir(argv[1]))
+				printf("Directory");
+		else printf("No Directory");
 	}
 
-	for (i = 1; i < argc; i++)
+	/* for (i = 1; i < argc; i++)
 	{
 		if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "help") == 0)
 		{
 			correctusage();
 			exit(1);
 		}
-	}
-
-
+	} */
 
 	return EXIT_SUCCESS;
 }
@@ -207,15 +207,19 @@ void do_dir(const char * dir_name, const char * const * parms)
 
 	     printf("%s\n",(*d).d_name);
 
+
+
 	     		if(fnmatch(dir_name,(*d).d_name,FNM_NOESCAPE) == 0)
 	     		{
 	     			printf("%s\n",(*d).d_name);
 	     		}
 
+	     /* check if dir or file */
 	        do_file(dir_name, parms);
-	    }
-	    closedir(dir);
-	}
+	  }
+
+   closedir(dir);
+}
 
 
 /**
@@ -330,10 +334,10 @@ void do_file(const char * file_name, const char * const * parms)
 void check_name(const char *parms, const char *file)
 {
 
-	struct stat mystat;
+	struct stat *mystat;
 
 	/* Fehlerbehandlung und Fehlerausgabe über errno */
-	if(lstat(file,&mystat) == -1)
+	if(lstat(file, mystat) == -1)
 	{
 	fprintf(stderr, "mystat() failed..\n");
 	fprintf(stderr, "Fehler: %s\n", strerror(errno));	
@@ -342,17 +346,14 @@ void check_name(const char *parms, const char *file)
 	}
 
 	
-	lstat(file, &mystat);
+	lstat(file, mystat);
 	 
-	if (S_ISREG(mystat.st_mode)) printf("%s\n", file );
-	else if (S_ISDIR(mystat.st_mode))
+	if (S_ISREG(mystat->st_mode)) printf("%s\n", file );
+	else if (S_ISDIR(mystat->st_mode))
 		{
 		printf("%s \n", file);
 		do_dir(file, parms);
 		}
-
-
-
 
 }
 
@@ -549,6 +550,16 @@ int check_type(const char * parms, struct stat *buffer)
 		exit(EXIT_FAILURE);
 
 	}
+}
+
+int is_dir (char * path)
+{
+	struct stat *mystat;
+	lstat(path, mystat);
+
+	if(S_ISDIR(mystat->st_mode))
+		return 1;
+	return 0;
 }
 
 
