@@ -103,9 +103,10 @@ void printf_handling(char * format, ...);
 int main(int argc, char* argv[])
 {
 	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
-	params_number = argc-1;
+	params_number = argc-1; /*Parameteranzahl wird an globale Varialbe übergeben */
 	parms * used_params;
 
+	/* if no parameter was entered, call correctusage and terminate */
 	if (argc == 1)
 	{
 		correctusage();
@@ -113,10 +114,12 @@ int main(int argc, char* argv[])
 	}
 	else if (argc > 1)
 	{
+		/*check parameters and save them in linked list */
 		used_params = check_parameter(argc, argv);
+		/* If no parameters were found and saved in the linked list, program terminates */
 		if (used_params == NULL)
 		{
-			printf("No Parameter found.\n");
+			printf_handling("No Parameter found.\n");
 			correctusage();
 			exit(1);
 		}
@@ -144,7 +147,7 @@ int main(int argc, char* argv[])
  * \param argc
  * \param argv
  *
- * @todo return
+ * \return linked list
  *
  */
 
@@ -158,10 +161,12 @@ parms * check_parameter(int argc, char * argv[])
 	int i = 2;
 	int j = 0;
 
-	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen */
+
+	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen - all parameters are checked */
 
 	for (; i < argc; i++)
 	{
+		/* checking all parameters given from user for correctness and if so, saving them in linked list */
 		if (strncmp(argv[i], "-name", 5) == 0)
 		{
 			/* Increment i as parameter is needed to check with name */
@@ -300,6 +305,7 @@ parms * check_parameter(int argc, char * argv[])
 				exit(1);
 			}
 
+			/* checking if correct length and correct parameter was passed from user, otherwise terminate */
 			j = strlen(argv[i]);
 			if (j != 1)
 			{
@@ -318,6 +324,7 @@ parms * check_parameter(int argc, char * argv[])
 			return NULL;
 	}
 
+	/* if no parameter was passed call print function */
 	if (start == NULL)
 	{
 		new = (parms *) malloc(sizeof(parms));
@@ -360,6 +367,7 @@ void read_params(const char * file_name, parms * used_params)
 		exit(1);
 	}
 
+	/* checking linked list as long as it is filled and no function terminates the process, due to mismatch */
 	while (current_param != NULL && success == 1)
 	{
 		switch(current_param->predicate)
@@ -379,6 +387,7 @@ void read_params(const char * file_name, parms * used_params)
 			case LS:
 			{
 				ls(file_name);
+				/* Increment to check if print function is needed */
 				printing++;
 				break;
 			}
@@ -409,12 +418,13 @@ void read_params(const char * file_name, parms * used_params)
 		current_param = current_param->next;
 	}
 
+	/* Call print function if no ls and no print is given */
 	if (printing == 0 && success == 1)
 		p_print(file_name);
 
 }
 /**
- * @todo \brief Function to
+ * @todo \brief Function to open directories recursively
  *
  * \param dir_name
  * \param used_params
@@ -425,6 +435,7 @@ void do_dir(const char * dir_name, parms * used_params)
 	 DIR * dir = opendir(dir_name);
 	 char path[PATH_MAX];
 
+	 /* Call read_params so directories are handled */
 	 read_params(dir_name, used_params);
 
 	 if (dir == NULL)
@@ -477,8 +488,8 @@ void do_file(const char * file_name, parms *used_params)
  * \param file
  * \param pattern
  *
- * @todo return
- * @todo return
+ * \returns 1 if match is successful
+ *
  *
  */
 
@@ -501,7 +512,7 @@ int check_name(const char * file, const char * pattern)
 
 /**
  *
- * @todo \brief Function
+ * @todo \brief Function to print out i-node information in -ls mode
  *
  * \param file
  *
@@ -539,7 +550,7 @@ void ls(const char * file)
 
 		link = (char*) malloc(sizeof(char));
 		if (link == NULL)
-			{ printf("Allocation not possible.\n"); exit(1); }
+			{ printf_handling("Allocation not possible.\n"); exit(1); }
 
 		if ((len = readlink(file, link, sizeof(link)-1)) != -1)
 		{
@@ -559,11 +570,11 @@ void ls(const char * file)
 
 /**
  *
- * @todo \brief Function
+ * @todo \brief Function to modify time in requeste format
  *
  * \param ftime
  *
- * @todo return
+ * \return string with formated date and time
  *
  */
 
@@ -595,9 +606,11 @@ static void correctusage(void)
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * \brief Function to check what kind of permission is given for each file and directory
  *
  * \param st_mode
+ *
+ * \ return string with filled in permission
  *
  */
 
@@ -606,6 +619,7 @@ char * checkpermissions(mode_t st_mode)
 	static char mode[11];
 	strcpy (mode, "----------");
 
+	/* checking file type */
 	if (st_mode & S_IFREG)
 		mode[0] = '-';
 		else if (S_ISCHR(st_mode))
@@ -621,6 +635,7 @@ char * checkpermissions(mode_t st_mode)
 		else if(S_ISSOCK(st_mode))
 			mode[0] = 's';
 
+	/* checking file permissions */
 	if (st_mode & S_IRUSR)
 		mode[1] = 'r';
 	if (st_mode & S_IWUSR)
@@ -703,12 +718,13 @@ int check_type(const char * parms, struct stat * buffer)
 
 /**
  *
- * \brief Function to check if file has no user
+ * \brief Function to check if file is a directory
  *
  * \param path
-  *
- * \return -1 for lstat failed
- * \return directory if successful
+ *
+ * \return directory
+ * \ return -1 if lstat failed
+ *
  */
 
 int is_dir (const char * path)
@@ -859,7 +875,7 @@ long string_change(const char * value)
 
 /**
  *
- * \brief Function to print a file
+ * \brief Function to print
  *
  * \param file_name
  *
@@ -873,6 +889,14 @@ int p_print(const char * file_name)
 	return 1;
 }
 
+/**
+ *
+ * \brief Function error handling of printf
+ *
+ * \param * format, ...
+ *
+ *
+ */
 void printf_handling(char * format, ...)
 {
 	va_list args;
