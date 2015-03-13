@@ -180,6 +180,12 @@ parms * check_parameter(int argc, char * argv[])
 			/* Increment i as parameter is needed to check with name */
 			i++;
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -201,6 +207,12 @@ parms * check_parameter(int argc, char * argv[])
 		else if (strncmp(argv[i], "-ls", 3) == 0)
 		{
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 				if (start == NULL)
 				{
 					start = new;
@@ -217,6 +229,12 @@ parms * check_parameter(int argc, char * argv[])
 		else if (strncmp(argv[i], "-print", 6) == 0)
 		{
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -234,6 +252,12 @@ parms * check_parameter(int argc, char * argv[])
 			/* Increment i as parameter is needed to check user and saved in the structure */
 			i++;
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -255,6 +279,12 @@ parms * check_parameter(int argc, char * argv[])
 		else if (strncmp(argv[i], "-nouser", 7) == 0)
 		{
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -272,6 +302,12 @@ parms * check_parameter(int argc, char * argv[])
 			/* Increment i as path is needed to be compared */
 			i++;
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -295,6 +331,12 @@ parms * check_parameter(int argc, char * argv[])
 			/* Increment i as type is needed to check against the file type */
 			i++;
 			new = (parms *) malloc(sizeof(parms));
+			if (new == NULL)
+			{
+				printf_handling("Allocation failed.\n");
+				free(new);
+				exit(1);
+			}
 			if (start == NULL)
 			{
 				start = new;
@@ -336,6 +378,12 @@ parms * check_parameter(int argc, char * argv[])
 	if (start == NULL)
 	{
 		new = (parms *) malloc(sizeof(parms));
+		if (new == NULL)
+		{
+			printf_handling("Allocation failed.\n");
+			free(new);
+			exit(1);
+		}
 		if (start == NULL)
 		{
 			start = new;
@@ -349,9 +397,8 @@ parms * check_parameter(int argc, char * argv[])
 		new->predicate = PRINT;
 	}
 
-
 	return start;
-
+	free(new);
 }
 
 /**
