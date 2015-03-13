@@ -113,7 +113,6 @@ int main(int argc, char* argv[])
 	}
 	else if (argc > 1)
 	{
-
 		used_params = check_parameter(argc, argv);
 		if (used_params == NULL)
 		{
@@ -121,7 +120,6 @@ int main(int argc, char* argv[])
 			correctusage();
 			exit(1);
 		}
-
 
 		if (is_dir(argv[1]))
 		{
@@ -153,11 +151,12 @@ int main(int argc, char* argv[])
 parms * check_parameter(int argc, char * argv[])
 {
 
-	/* Initialise Pointer for linked list */
+	/* Initialize Pointer for linked list */
 	parms * current = NULL;
 	parms * start = NULL;
 	parms * new = NULL;
 	int i = 2;
+	int j = 0;
 
 	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen */
 
@@ -295,7 +294,12 @@ parms * check_parameter(int argc, char * argv[])
 			}
 			new->predicate = TYPE;
 
-			int j = 0;
+			if (argv[i] == NULL)
+			{
+				printf("Missing argument.\n");
+				exit(1);
+			}
+
 			j = strlen(argv[i]);
 			if (j != 1)
 			{
@@ -303,12 +307,6 @@ parms * check_parameter(int argc, char * argv[])
 				exit(1);
 			}
 
-			if (argv[i] == NULL)
-			{
-				printf("Missing argument.");
-				exit(1);
-			}
-			else
 			new->pattern = argv[i];
 			if (strchr(new->pattern, 'b') == NULL && strchr(new->pattern, 'c') == NULL && strchr(new->pattern, 'd') == NULL && strchr(new->pattern, 'f') == NULL && strchr(new->pattern, 'l') == NULL && strchr(new->pattern, 'p') == NULL && strchr(new->pattern, 's') == NULL)
 			{
@@ -396,7 +394,6 @@ void read_params(const char * file_name, parms * used_params)
 			}
 			case PATH:
 			{
-				printf("Path übergeben\n");
 				success = check_path(current_param->pattern, file_name);
 				break;
 			}
@@ -629,19 +626,43 @@ char * checkpermissions(mode_t st_mode)
 	if (st_mode & S_IWUSR)
 		mode[2] = 'w';
 	if (st_mode & S_IXUSR)
+	{
 		mode[3] = 'x';
+		if(st_mode & S_ISUID)
+			mode[3] = 's';
+		else
+			mode[3] = 'x';
+	}
+	else if (st_mode & S_ISUID)
+		mode[3] = 'S';
 	if (st_mode & S_IRGRP)
 		mode[4] = 'r';
 	if (st_mode & S_IWGRP)
 		mode[5] = 'w';
 	if (st_mode & S_IXGRP)
+	{
 		mode[6] = 'x';
+		if(st_mode & S_ISGID)
+			mode[6] = 's';
+		else
+			mode[6] = 'x';
+	}
+	else if(st_mode & S_ISGID)
+		mode[6] = 'S';
 	if (st_mode & S_IROTH)
 		mode[7] = 'r';
 	if (st_mode & S_IWOTH)
 		mode[8] = 'w';
 	if (st_mode & S_IXOTH)
+	{
 		mode[9] = 'x';
+		if (st_mode & S_ISVTX)
+			mode[9] = 't';
+		else
+			mode[9] = 'x';
+	}
+	else if (st_mode & S_ISVTX)
+		mode[9] = 'T';
 
 	return mode;
 }
@@ -784,7 +805,10 @@ int check_user(const char * parms, struct stat * buffer)
 			userpwd = getpwnam(parms);
 
 			if (userpwd == NULL)
+			{
 				printf("User not found.\n");
+				exit(1);
+			}
 
 			else
 			{
