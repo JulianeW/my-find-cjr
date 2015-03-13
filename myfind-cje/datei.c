@@ -80,7 +80,6 @@ typedef struct parms
  */
 const char *prgname = NULL;
 static int params_number = 0;
-static const char * type_possibilities = "bcdpfls";
 
 /*
  * ------------------------------------------------------------- prototypes--
@@ -409,14 +408,14 @@ void read_params(const char * file_name, parms *used_params)
 			case USER:
 			{
 				printf("User uebergeben.\n");
-
+				success = check_user(current_param->pattern, &current_file);
 				break;
 			}
 			default: printf("Unknown predicate.\n");
 
 		}
-		current_param = current_param->next;
 
+		current_param = current_param->next;
 	}
 
 }
@@ -795,8 +794,10 @@ int check_user(const char * parms, struct stat *buffer)
 		{
 			struct passwd * userpwd;
 
-			if((userpwd = (parms))==NULL)
-				fprintf(stdout, "User not found.\n");
+			userpwd = getpwnam(parms);
+
+			if(userpwd == NULL)
+				printf("User not found.\n");
 
 			else
 			{
