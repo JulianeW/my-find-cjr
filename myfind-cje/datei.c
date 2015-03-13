@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <stdarg.h>
 
 /** ---------------------------------------------- typedefs--
  *
@@ -53,45 +54,45 @@ typedef enum {
 typedef struct parms
 {	Parameter predicate;
 	char * pattern;
-	struct parms *next;
+	struct parms * next;
 } parms;
 
 /*
  * --------------------------------------------------------------- globals --
  */
-const char *prgname = NULL;
+const char * prgname = NULL;
 static int params_number = 0;
 
 /*
  * ------------------------------------------------------------- prototypes--
  */
 
-int check_name(const char *file, const char * pattern);
+int check_name(const char * file, const char * pattern);
 static void correctusage(void);
-void ls(const char *file);
+void ls(const char * file);
 char * modifytime(time_t ftime);
 char * checkpermissions(mode_t st_mode);
 int check_type(const char * parms, struct stat * buffer);
 int check_path(const char * parms, const char * dir_name);
-int check_no_user(struct stat *buffer);
-int check_user(const char * parms, struct stat *buffer);
+int check_no_user(struct stat * buffer);
+int check_user(const char * parms, struct stat * buffer);
 long string_change(const char * value);
-void do_dir(const char * dir_name, parms *used_params);
-void do_file(const char * file_name, parms *used_params);
-void read_params(const char * file_name, parms *used_params);
-int p_print(const char *file_name);
+void do_dir(const char * dir_name, parms * used_params);
+void do_file(const char * file_name, parms * used_params);
+void read_params(const char * file_name, parms * used_params);
+int p_print(const char * file_name);
 int is_dir (const char * path);
 parms * check_parameter(int argc, char * argv[]);
-
+void printf_handling(char * format, ...);
 
 
 /**
  *
- * \brief
+ * \brief Main entry point of program
  *
  *
  * \param argc the number of arguments
- * \param argv the arguments itselves (including the program name in argv[0])
+ * \param argv the arguments (including the program name in argv[0])
  *
  * \return always "success"
  * \retval 0 always
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
 {
 	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
 	params_number = argc-1;
-	parms *used_params;
+	parms * used_params;
 
 	if (argc == 1)
 	{
@@ -142,7 +143,7 @@ int main(int argc, char* argv[])
  * \brief Function to create a linked list with the parameters
  *
  * \param argc
- * \param * argv[]
+ * \param argv
  *
  * @todo return
  *
@@ -152,9 +153,9 @@ parms * check_parameter(int argc, char * argv[])
 {
 
 	/* Initialise Pointer for linked list */
-	parms *current = NULL;
-	parms *start = NULL;
-	parms *new = NULL;
+	parms * current = NULL;
+	parms * start = NULL;
+	parms * new = NULL;
 
 	/* Zählvariable i = 2 da erst bei argc = 2 die Parameterübergaben beginnen */
 	int i = 2;
@@ -295,7 +296,7 @@ parms * check_parameter(int argc, char * argv[])
 
 			int j = 0;
 			j = strlen(argv[i]);
-			if(j != 1)
+			if (j != 1)
 			{
 				printf("Argument is too long.\n");
 				exit(1);
@@ -346,15 +347,15 @@ parms * check_parameter(int argc, char * argv[])
  * \param * used_params
  */
 
-void read_params(const char * file_name, parms *used_params)
+void read_params(const char * file_name, parms * used_params)
 {
-	parms *current_param = used_params;
+	parms * current_param = used_params;
 	int success = 1;
 	struct stat current_file;
-	int p_ls = 0;
-	int print = 0;
+	int printing = 0;
 
 	lstat(file_name, &current_file);
+
 
 	while (current_param != NULL && success == 1)
 	{
@@ -368,14 +369,14 @@ void read_params(const char * file_name, parms *used_params)
 			case PRINT:
 			{
 				success = p_print(file_name);
-				print = 1;
+				printing++;
 				break;
 
 			}
 			case LS:
 			{
 				ls(file_name);
-				p_ls = 1;
+				printing++;
 				break;
 			}
 			case TYPE:
@@ -406,20 +407,20 @@ void read_params(const char * file_name, parms *used_params)
 		current_param = current_param->next;
 	}
 
-	/* if (p_ls != 1 && print != 1)
-		p_print(file_name); */
+	if (printing == 0 && success == 1)
+		p_print(file_name);
 
 }
 /**
  * @todo \brief Function to
  *
- * \param * dir_name
- * \param * used_params
+ * \param dir_name
+ * \param used_params
  */
-void do_dir(const char * dir_name, parms *used_params)
+void do_dir(const char * dir_name, parms * used_params)
 {
-	 const struct dirent *d;
-	 DIR *dir = opendir(dir_name);
+	 const struct dirent * d;
+	 DIR * dir = opendir(dir_name);
 	 char path[PATH_MAX];
 
 	 read_params(dir_name, used_params);
@@ -457,8 +458,8 @@ void do_dir(const char * dir_name, parms *used_params)
  *
  * \brief Function to check each file in directory
  *
- * \param * file_name
- * \param * used_params
+ * \param file_name
+ * \param used_params
  *
  */
  
@@ -471,24 +472,24 @@ void do_file(const char * file_name, parms *used_params)
  *
  * \brief Function to check if entered name exists
  *
- * \param * file
- * \param * pattern
+ * \param file
+ * \param pattern
  *
  * @todo return
  * @todo return
  *
  */
 
-int check_name(const char *file, const char * pattern)
+int check_name(const char * file, const char * pattern)
 {
-	char *final_name = NULL;
-	char *name;
+	char * final_name = NULL;
+	char * name;
 	int success = 0;
 
 	name = strdup(file);
 	final_name = basename(name);
 
-	if(fnmatch(final_name, pattern, 0) == 0)
+	if (fnmatch(final_name, pattern, 0) == 0)
 		success = 1;
 
 	return success;
@@ -500,11 +501,11 @@ int check_name(const char *file, const char * pattern)
  *
  * @todo \brief Function
  *
- * \param *file
+ * \param file
  *
  */
 
-void ls(const char *file)
+void ls(const char * file)
 {
 
 	/* necessary structs for all information needed in ls */
@@ -518,7 +519,7 @@ void ls(const char *file)
 	mypw = getpwuid(lsstat.st_uid);
 
 	/** calling necessary functions and printing all information asked for in ls */
-	printf("%ld\t%ld\t%s\t%ld\t%s\t%s\t%s\t%s\n",
+	printf_handling("%ld\t%ld\t%s\t%ld\t%s\t%s\t%s\t%s\n",
 			(long)lsstat.st_ino,
 			(long)lsstat.st_blocks/2,
 			checkpermissions(lsstat.st_mode),
@@ -531,7 +532,7 @@ void ls(const char *file)
 
 	if (S_ISLNK(lsstat.st_mode))
 	{
-		char *link;
+		char * link;
 		int len = 0;
 
 		link = (char*) malloc(sizeof(char));
@@ -566,7 +567,7 @@ void ls(const char *file)
 
 char * modifytime(time_t ftime)
 {
-	struct tm *time;
+	struct tm * time;
 	static char filetime[30];
 
 	time=localtime(&ftime);
@@ -644,20 +645,14 @@ char * checkpermissions(mode_t st_mode)
  *
  * \brief Function to check if a valid file type was entered and if there are any files of this type
  *
- * @todo Parameternamen?
- * @todo Fehlermeldung in find(1) checken (Fehler wenn falscher Dateityp, Fehler wenn nichts gefunden)
- * @todo einfachere Umsetzung mit Switch?
- * @todo Umsetzung ohne type_chars und help_chars?
- * @todo möglicherweise überprüfen, ob überhaupt ein valider Datentyp eingegeben wurde, bevor in Funktion gegangen wird?!
- *
- * \param *parms
- * \param stat buffer
+ * \param parms
+ * \param buffer
  *
  * \return 1 for successful match
- * \return 0 for unsuccesful match
+ * \return 0 for unsuccessful match
  */
 
-int check_type(const char * parms, struct stat *buffer)
+int check_type(const char * parms, struct stat * buffer)
 {
 		int success = 0;
 
@@ -684,7 +679,7 @@ int check_type(const char * parms, struct stat *buffer)
  *
  * \brief Function to check if file has no user
  *
- * \param char *path
+ * \param path
   *
  * \return -1 for lstat failed
  * \return directory if successful
@@ -694,7 +689,7 @@ int is_dir (const char * path)
 {
 	struct stat mystat;
 
-	if(lstat(path, &mystat) == -1)
+	if (lstat(path, &mystat) == -1)
 	{
 		fprintf(stderr, "%s: %s \n", path, strerror(errno));
 		return -1;
@@ -708,15 +703,7 @@ int is_dir (const char * path)
  *
  * \brief Function to check if a valid path was entered and if the path matches match
  *
- * @todo Ausgabe der Dateien wo? in Funktion, außerhalb der Funktion? vorerst wird nur gecheckt; wenn Rückgabe der Ergebnisse in void umwandeln?
- * @todo Parameternamen?
- * @todo Fehlermeldung in find(1) checken
- * @todo möglicherweise überprüfen, ob überhaupt ein valider path eingegeben wurde, bevor in Funktion gegangen wird?! gibt es überhaupt einen invalid path?
- * @todo fnmatch hat Flags, brauche ich die?
- * @todo Brauche ich hier überhaupt eine Funktion?
- * @todo bei path wird gesamter Pfad ausgegeben; Ausgabe muss noch geändert werden
- *
- * \param *parms
+ * \param parms
  * \param dir_name
  *
  * \return 1 for successful match
@@ -726,7 +713,7 @@ int is_dir (const char * path)
 int check_path(const char * parms, const char * dir_name)
 {
 
-	if(fnmatch(parms, dir_name, 0) == 0) /* The fnmatch() function checks whether the string argument matches the parms argument. */
+	if (fnmatch(parms, dir_name, 0) == 0)
 	{
 		return 1;
 	}
@@ -746,9 +733,9 @@ int check_path(const char * parms, const char * dir_name)
  * \return 0 for unsuccessful match
  */
 
-int check_no_user(struct stat *buffer)
+int check_no_user(struct stat * buffer)
 {
-	if(getpwuid(buffer->st_uid)==NULL)
+	if (getpwuid(buffer->st_uid)==NULL)
 		return 1;
 	else
 		return 0;
@@ -756,16 +743,16 @@ int check_no_user(struct stat *buffer)
 
 /**
  *
- * \brief Function to check if valid username was given and if file is of this user
+ * \brief Function to check if valid user name was given and if file is of this user
  *
- * \param *parms
+ * \param parms
  * \param buffer
  *
  * \return 1 for successful match
  * \return 0 for unsuccesful match
  */
 
-int check_user(const char * parms, struct stat *buffer)
+int check_user(const char * parms, struct stat * buffer)
 {
 	int i = 0;
 	int uid = 0;
@@ -773,14 +760,14 @@ int check_user(const char * parms, struct stat *buffer)
 
 	for(i=0; i<= user_length; i++)
 	{
-		if(!isdigit(parms[i]))
+		if (!isdigit(parms[i]))
 			break; /* check nur Zahlen? */
 	}
-		if(i == user_length)
+		if (i == user_length)
 		{
-			if((uid = string_change(parms)) > -1)
+			if ((uid = string_change(parms)) > -1)
 			{
-				if(uid == buffer->st_uid) return 1;
+				if (uid == buffer->st_uid) return 1;
 			}
 			return 0;
 		}
@@ -791,12 +778,12 @@ int check_user(const char * parms, struct stat *buffer)
 
 			userpwd = getpwnam(parms);
 
-			if(userpwd == NULL)
+			if (userpwd == NULL)
 				printf("User not found.\n");
 
 			else
 			{
-				if(userpwd->pw_uid == buffer->st_uid) return 1;
+				if (userpwd->pw_uid == buffer->st_uid) return 1;
 				else return 0;
 			}
 
@@ -819,38 +806,51 @@ int check_user(const char * parms, struct stat *buffer)
 
 long string_change(const char * value)
 {
-	char *ep;
+	char * ep;
 	long lvalue;
 	errno = 0;
 
 	lvalue = strtol(value, &ep, 10);
 
-	if(value[0] == '\0') return -1;
-	if(*ep != '\0') return -1;
-	if(errno == ERANGE && lvalue == (LONG_MAX || lvalue == LONG_MIN))
+	if (value[0] == '\0')
+		return -1;
+	if (* ep != '\0')
+		return -1;
+	if (errno == ERANGE && lvalue == (LONG_MAX || lvalue == LONG_MIN))
 	{
 		errno=0;
 		return -1;
 	}
 
-	if(lvalue < 0) return -1;
+	if (lvalue < 0)
+		return -1;
 
 	return lvalue;
 }
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * \brief Function to print a file
  *
- * \param *file_name
- * return 1 on succes
+ * \param file_name
+ *
+ * return 1 on success
  *
  */
 
-int p_print(const char *file_name)
+int p_print(const char * file_name)
 {
-	printf("%s\n", file_name);
+	printf_handling("%s\n", file_name);
 	return 1;
+}
+
+void printf_handling(char * format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	if (vprintf(format, args) < 0) error(1, 1, "%d", errno);
+	va_end(args);
 }
 
 
