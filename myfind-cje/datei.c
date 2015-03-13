@@ -1,5 +1,5 @@
 /**
- * @file myfind.c
+ * @file datei.c
  * Betriebssysteme Myfind File
  * Beispiel 1
  *
@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <error.h>
 #include <time.h>
 #include <malloc.h>
 #include <fnmatch.h>
@@ -156,9 +157,9 @@ parms * check_parameter(int argc, char * argv[])
 	parms * current = NULL;
 	parms * start = NULL;
 	parms * new = NULL;
-
-	/* Zählvariable i = 2 da erst bei argc = 2 die Parameterübergaben beginnen */
 	int i = 2;
+
+	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen */
 
 	for (; i < argc; i++)
 	{
@@ -355,7 +356,11 @@ void read_params(const char * file_name, parms * used_params)
 	int printing = 0;
 
 	lstat(file_name, &current_file);
-
+	if (lstat(file_name, &current_file) == -1)
+	{
+		fprintf(stderr, "%s : %s", file_name, strerror(errno));
+		exit(1);
+	}
 
 	while (current_param != NULL && success == 1)
 	{
@@ -581,12 +586,12 @@ char * modifytime(time_t ftime)
 static void correctusage(void)
 {
 	printf("Correct use of: %s\n -user: searches entries of certain users\n -name: searches entries with a given name\n"
-			"-type (bcdpfls): searches for certain type"
-			"-print: prints name of entry"
-			"-ls: prints certain information of file"
-			"-nouser: searches entries with nouser"
-			"-path: searches entries with given path"
-			"For further information do find --help"
+			"-type (bcdpfls): searches for certain type\n"
+			"-print: prints name of entry\n"
+			"-ls: prints certain information of file\n"
+			"-nouser: searches entries with nouser\n"
+			"-path: searches entries with given path\n"
+			"For further information do find --help\n"
 			, prgname);
 
 }
