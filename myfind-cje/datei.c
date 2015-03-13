@@ -51,6 +51,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <libgen.h>
 
 /** ---------------------------------------------- typedefs--
  *
@@ -148,14 +149,10 @@ int main(int argc, char* argv[])
 
 		if (is_dir(argv[1]))
 		{
-			printf("directory\n");
 			do_dir(argv[1], used_parms);
 		}
 		else do_file(argv[1], used_parms);
 	}
-
-
-
 
 
 	return EXIT_SUCCESS;
@@ -322,7 +319,7 @@ parms * check_parameter(int argc, char * argv[])
 			if (strlen(argv[i] == 1 && (NULL == strchr(type_possibilities, argv[i]))))
 			{
 					printf("wrong argument");
-					return EXIT_FAILURE;
+					exit(1);
 			}
 			if (argv[i] == NULL)
 			{
@@ -376,12 +373,14 @@ void do_dir(const char * dir_name, parms *used_parms)
 
 	     snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
 
-	     if (is_dir(dir_name))
+	     if (is_dir(path))
 	     {
-	       	do_dir(path, used_parms);
-	     }
+	    	 printf("In Rekursion gegangen");
+	       	 do_dir(path, used_parms);
 
+	     }
 	     else do_file(path, used_parms);
+
 
 	  }
 
@@ -428,7 +427,6 @@ void do_file(const char * file_name, parms *used_params)
 			}
 			case LS:
 			{
-				printf("LS uebergeben\n");
 				ls(file_name);
 				break;
 			}
@@ -448,6 +446,12 @@ void do_file(const char * file_name, parms *used_params)
 			{
 				printf("Path übergeben\n");
 				check_path(current_param->pattern, file_name);
+				break;
+			}
+			case USER:
+			{
+				printf("User uebergeben.\n");
+
 				break;
 			}
 			default: printf("Unknown predicate.\n");
@@ -471,10 +475,15 @@ void do_file(const char * file_name, parms *used_params)
 
 int check_name(const char *file, const char * pattern)
 {
-	/* file = basename(file); */
+	char *name = NULL;
+	char *final_name = NULL;
 	int success = 0;
 
-	success = fnmatch(file, pattern, 0);
+	strcpy(name, file);
+
+	final_name = basename(name);
+
+	success = fnmatch(final_name, pattern, 0);
 
 	return success;
 
@@ -493,24 +502,24 @@ void ls(const char *file)
 {
 
 	/* necessary structs for all information needed in ls */
-	struct stat *lsstat = NULL;
-	lstat(file, lsstat);
+	struct stat lsstat;
+	lstat(file, &lsstat);
 	struct group *mygroup = NULL;
 	struct passwd *mypw = NULL;
 
 	/* filling structs with the file information and getting owner and group information */
-	mygroup = getgrgid(lsstat->st_gid);
-	mypw = getpwuid(lsstat->st_uid);
+	mygroup = getgrgid(lsstat.st_gid);
+	mypw = getpwuid(lsstat.st_uid);
 
 	/** calling necessary functions and printing all information asked for in ls */
-	fprintf(stdout, "%ld\t%ld\t%s\t%ld\n%s\t%s\t%s\t%s\n",
-			(long)lsstat->st_ino,
-			(long)lsstat->st_blocks/2,
-			checkpermissions(lsstat->st_mode),
-			(long)lsstat->st_nlink,
+	printf("%ld\t%ld\t%s\t%ld\t%s\t%s\t%s\t%s\n",
+			(long)lsstat.st_ino,
+			(long)lsstat.st_blocks/2,
+			checkpermissions(lsstat.st_mode),
+			(long)lsstat.st_nlink,
 			mypw->pw_name,
 			mygroup->gr_name,
-			modifytime(lsstat->st_mtime), file);
+			modifytime(lsstat.st_mtime), file);
 
 	/* symbolic links */
 #if 0
@@ -603,21 +612,21 @@ char * checkpermissions(mode_t st_mode)
 
 	if (st_mode & S_IRUSR)
 		mode[1] = 'r';
-	else if (st_mode & S_IWUSR)
+	if (st_mode & S_IWUSR)
 		mode[2] = 'w';
-	else if (st_mode & S_IXUSR)
+	if (st_mode & S_IXUSR)
 		mode[3] = 'x';
-	else if (st_mode & S_IRGRP)
+	if (st_mode & S_IRGRP)
 		mode[4] = 'r';
-	else if (st_mode & S_IWGRP)
+	if (st_mode & S_IWGRP)
 		mode[5] = 'w';
-	else if (st_mode & S_IXGRP)
+	if (st_mode & S_IXGRP)
 		mode[6] = 'x';
-	else if (st_mode & S_IROTH)
+	if (st_mode & S_IROTH)
 		mode[7] = 'r';
-	else if (st_mode & S_IWOTH)
+	if (st_mode & S_IWOTH)
 		mode[8] = 'w';
-	else if (st_mode & S_IXOTH)
+	if (st_mode & S_IXOTH)
 		mode[9] = 'x';
 
 	return mode;
@@ -664,14 +673,27 @@ int check_type(const char * parms, struct stat *buffer)
 
 }
 
+/**
+ *
+ * \brief Function to check if file has no user
+ *
+ * \param char *path
+  *
+ * \return -1 for lstat failed
+ * \return directory if successful
+ */
+
 int is_dir (const char * path)
 {
 	struct stat mystat;
-	lstat(path, &mystat);
 
-	if(S_ISDIR(mystat.st_mode))
-		return 1;
-	return 0;
+	if(lstat(path, &mystat) == -1)
+	{
+		fprintf(stderr, "%s: %s \n", path, strerror(errno));
+		return -1;
+	}
+
+	return(S_ISDIR(mystat.st_mode));
 }
 
 
@@ -818,7 +840,7 @@ long string_change(const char * value)
 
 int p_print(const char *file_name)
 {
-	printf("%s", file_name);
+	printf("%s\n", file_name);
 	return 1;
 }
 
