@@ -822,7 +822,7 @@ int check_user(const char * parms, struct stat * buffer)
 
 			if (userpwd == NULL)
 			{
-				printf("User not found.\n");
+				printf_handling("%s: `%s' is not the name of a known user.\n", prgname, parms);
 				exit(1);
 			}
 
