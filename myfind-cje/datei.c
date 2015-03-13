@@ -161,6 +161,12 @@ parms * check_parameter(int argc, char * argv[])
 	int i = 2;
 	int j = 0;
 
+	if (strncmp(argv[1], "-", 1) == 0)
+	{
+		printf_handling("First argument needs to be a path.\n");
+		correctusage();
+		exit(1);
+	}
 
 	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen - all parameters are checked */
 
@@ -786,7 +792,8 @@ int check_no_user(struct stat * buffer)
 /**
  *
  * \brief Function to check if valid user name was given and if file is of this user
- *
+ *  Checks for digits-only; if UID, check file_info
+ *  If not digits-only, checks if valid user name; if yes, check file_info
  * \param parms
  * \param buffer
  *
@@ -800,12 +807,12 @@ int check_user(const char * parms, struct stat * buffer)
 	int uid = 0;
 	int user_length = strlen(parms);
 
-	for(i=0; i<= user_length; i++)
+	for(i=0; i<= user_length; i++) /* check if user id is digits only */
 	{
 		if (!isdigit(parms[i]))
-			break; /* check nur Zahlen? */
+			break;
 	}
-		if (i == user_length)
+		if (i == user_length) /* if successful, check UID */
 		{
 			if ((uid = string_change(parms)) > -1)
 			{
@@ -814,7 +821,7 @@ int check_user(const char * parms, struct stat * buffer)
 			return 0;
 		}
 
-		else
+		else /* no UID */
 		{
 			struct passwd * userpwd;
 
@@ -822,11 +829,11 @@ int check_user(const char * parms, struct stat * buffer)
 
 			if (userpwd == NULL)
 			{
-				printf_handling("%s: `%s' is not the name of a known user.\n", prgname, parms);
+				fprintf(stderr, "%s: `%s' is not the name of a known user.\n", prgname, parms);
 				exit(1);
 			}
 
-			else
+			else /* checks if valid username */
 			{
 				if (userpwd->pw_uid == buffer->st_uid) return 1;
 				else return 0;
@@ -842,8 +849,8 @@ int check_user(const char * parms, struct stat * buffer)
  *
  * \brief Function
  *
- * @todo Beschreibung! Was macht diese Funktion?
- * \param *value
+ * Converts string to long value. Returns -1 if it fails.
+ * \param *value String to convert
  *
  * \return -1 for error
  * \return lvalue for success
