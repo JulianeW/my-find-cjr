@@ -65,8 +65,7 @@ typedef enum {
 	PRINT,
 	LS,
 	NOUSER,
-	PATH,
-	ARGUMENT
+	PATH
 } Parameter;
 
 
@@ -81,7 +80,7 @@ typedef struct parms
  */
 const char *prgname = NULL;
 static int params_number = 0;
-static const char * type_possibilities = "bscdlfps";
+static const char * type_possibilities = "bcdpfls";
 
 /*
  * ------------------------------------------------------------- prototypes--
@@ -97,7 +96,7 @@ int check_path(const char * parms, const char * dir_name);
 int check_no_user(struct stat *buffer);
 int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
-void do_dir(const char * dir_name, parms *used_parms);
+void do_dir(const char * dir_name, parms *used_params);
 void do_file(const char * file_name, parms *used_params);
 void read_params(const char * file_name, parms *used_params);
 int p_print(const char *file_name);
@@ -124,11 +123,10 @@ int main(int argc, char* argv[])
 {
 	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
 	params_number = argc-1;
-	const char * dir_name = "."; /* current directory is used when no directory is entered */
-	parms *used_parms;
+	parms *used_params;
 
 
-	/* check_file_parameter(argv, params_number, param_array); */
+
 
 
 	if (argc == 1)
@@ -139,8 +137,8 @@ int main(int argc, char* argv[])
 	else if (argc > 1)
 	{
 
-		used_parms = check_parameter(argc, argv);
-		if (used_parms == NULL)
+		used_params = check_parameter(argc, argv);
+		if (used_params == NULL)
 		{
 			printf("No Parameter found.\n");
 			correctusage();
@@ -150,9 +148,9 @@ int main(int argc, char* argv[])
 
 		if (is_dir(argv[1]))
 		{
-			do_dir(argv[1], used_parms);
+			do_dir(argv[1], used_params);
 		}
-		else do_file(argv[1], used_parms);
+		else do_file(argv[1], used_params);
 	}
 
 
@@ -317,17 +315,27 @@ parms * check_parameter(int argc, char * argv[])
 				current = new;
 			}
 			new->predicate = TYPE;
-			if (strlen(argv[i] == 1 && (NULL == strchr(type_possibilities, argv[i]))))
+
+			int j = 0;
+			j = strlen(argv[i]);
+			if(j != 1)
 			{
-					printf("wrong argument");
-					exit(1);
+				printf("Argument is too long.\n");
+				exit(1);
 			}
+
 			if (argv[i] == NULL)
 			{
 				printf("Missing argument.");
 				exit(1);
 			}
+			else
 			new->pattern = argv[i];
+			if (strchr(new->pattern, 'b') == NULL && strchr(new->pattern, 'c') == NULL && strchr(new->pattern, 'd') == NULL && strchr(new->pattern, 'f') == NULL && strchr(new->pattern, 'l') == NULL && strchr(new->pattern, 'p') == NULL && strchr(new->pattern, 's') == NULL)
+			{
+				printf("Wrong parameter.\n");
+				exit(1);
+			}
 		}
 		else
 			return NULL;
@@ -349,6 +357,7 @@ parms * check_parameter(int argc, char * argv[])
 		new->predicate = PRINT;
 	}
 
+
 	return start;
 
 }
@@ -357,6 +366,7 @@ void read_params(const char * file_name, parms *used_params)
 	parms *current_param = used_params;
 	int success = 1;
 	struct stat current_file;
+
 	lstat(file_name, &current_file);
 
 	while (current_param != NULL && success == 1)
@@ -382,20 +392,18 @@ void read_params(const char * file_name, parms *used_params)
 			}
 			case TYPE:
 			{
-				check_type(current_param->pattern, &current_file);
-				printf("Type übergeben\n");
+				success = check_type(current_param->pattern, &current_file);
 				break;
 			}
 			case NOUSER:
 			{
-				check_no_user(&current_file);
-				printf("User übergeben\n");
+				success = check_no_user(&current_file);
 				break;
 			}
 			case PATH:
 			{
 				printf("Path übergeben\n");
-				check_path(current_param->pattern, file_name);
+				success = check_path(current_param->pattern, file_name);
 				break;
 			}
 			case USER:
@@ -413,13 +421,13 @@ void read_params(const char * file_name, parms *used_params)
 
 }
 
-void do_dir(const char * dir_name, parms *used_parms)
+void do_dir(const char * dir_name, parms *used_params)
 {
 	 const struct dirent *d;
 	 DIR *dir = opendir(dir_name);
 	 char path[PATH_MAX];
 
-	 read_params(dir_name, used_parms);
+	 read_params(dir_name, used_params);
 
 	 if (dir == NULL)
 	 {
@@ -438,10 +446,10 @@ void do_dir(const char * dir_name, parms *used_parms)
 
 	     if (is_dir(path))
 	     {
-	    	 do_dir(path, used_parms);
+	    	 do_dir(path, used_params);
 
 	     }
-	     else do_file(path, used_parms);
+	     else do_file(path, used_params);
 
 
 	  }
@@ -527,9 +535,9 @@ void ls(const char *file)
 			mygroup->gr_name,
 			modifytime(lsstat.st_mtime), file);
 
-	/* symbolic links */
-#if 0
-	if (S_ISLNK(lsstat->st_mode))
+	/* checking for symbolic links */
+
+	if (S_ISLNK(lsstat.st_mode))
 	{
 		char *link;
 		int len = 0;
@@ -550,7 +558,7 @@ void ls(const char *file)
 
 		free(link);
 	}
-#endif
+
 }
 
 
@@ -657,25 +665,24 @@ char * checkpermissions(mode_t st_mode)
 
 int check_type(const char * parms, struct stat *buffer)
 {
-
+		int success = 0;
 
 		if (strcmp(parms, "b") == 0 && S_ISBLK(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "c") == 0 && S_ISCHR(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "d") == 0 && S_ISDIR(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "f") == 0 && S_ISREG(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "l") == 0 && S_ISLNK(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "p") == 0 && S_ISFIFO(buffer->st_mode))
-			return 1;
-		else if (strcmp(parms, "s") == 0 && S_ISSOCK(buffer->st_mode))
-			return 1;
-		else
-			return 0;
+			success = 1;
+		if (strcmp(parms, "c") == 0 && S_ISCHR(buffer->st_mode))
+			success = 1;
+		if (strcmp(parms, "d") == 0 && S_ISDIR(buffer->st_mode))
+			success = 1;
+		if (strcmp(parms, "f") == 0 && S_ISREG(buffer->st_mode))
+			success = 1;
+		if (strcmp(parms, "l") == 0 && S_ISLNK(buffer->st_mode))
+			success = 1;
+		if (strcmp(parms, "p") == 0 && S_ISFIFO(buffer->st_mode))
+			success = 1;
+		if (strcmp(parms, "s") == 0 && S_ISSOCK(buffer->st_mode))
+			success = 1;
 
+		return success;
 
 }
 
