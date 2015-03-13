@@ -99,6 +99,7 @@ int check_user(const char * parms, struct stat *buffer);
 long string_change(const char * value);
 void do_dir(const char * dir_name, parms *used_parms);
 void do_file(const char * file_name, parms *used_params);
+void read_params(const char * file_name, parms *used_params);
 int p_print(const char *file_name);
 int is_dir (const char * path);
 parms * check_parameter(int argc, char * argv[]);
@@ -351,58 +352,7 @@ parms * check_parameter(int argc, char * argv[])
 	return start;
 
 }
-
-void do_dir(const char * dir_name, parms *used_parms)
-{
-	 const struct dirent *d;
-	 DIR *dir = opendir(dir_name);
-	 char path[PATH_MAX];
-
-	 if (dir == NULL)
-	 {
-	     fprintf(stderr, "%s: %s: %s\n", prgname, dir_name, strerror(errno));
-	     return;
-	 }
-
-	 while((d = readdir(dir)) != NULL)
-	 {
-	     if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
-	     {
-	         continue;
-	     }
-
-	     snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
-
-	     if (is_dir(path))
-	     {
-	    	 printf("In Rekursion gegangen");
-	       	 do_dir(path, used_parms);
-
-	     }
-	     else do_file(path, used_parms);
-
-
-	  }
-
-   closedir(dir);
-}
-
-
-/**
- *
- * \brief
- *
- * @todo restliche Funktionen einbauen
- * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
- * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
- * 		gegangen werden
- *
- * \param *parms
- * \param dir_name
- *
- */
- 
-void do_file(const char * file_name, parms *used_params)
+void read_params(const char * file_name, parms *used_params)
 {
 	parms *current_param = used_params;
 	int success = 1;
@@ -461,6 +411,62 @@ void do_file(const char * file_name, parms *used_params)
 
 	}
 
+}
+
+void do_dir(const char * dir_name, parms *used_parms)
+{
+	 const struct dirent *d;
+	 DIR *dir = opendir(dir_name);
+	 char path[PATH_MAX];
+
+	 read_params(dir_name, used_parms);
+
+	 if (dir == NULL)
+	 {
+	     fprintf(stderr, "%s: %s: %s\n", prgname, dir_name, strerror(errno));
+	     return;
+	 }
+
+	 while((d = readdir(dir)) != NULL)
+	 {
+	     if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
+	     {
+	         continue;
+	     }
+
+	     snprintf(path, PATH_MAX, "%s/%s", dir_name, d->d_name);
+
+	     if (is_dir(path))
+	     {
+	    	 do_dir(path, used_parms);
+
+	     }
+	     else do_file(path, used_parms);
+
+
+	  }
+
+   closedir(dir);
+}
+
+
+/**
+ *
+ * \brief
+ *
+ * @todo restliche Funktionen einbauen
+ * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
+ * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
+ * 		gegangen werden
+ *
+ * \param *parms
+ * \param dir_name
+ *
+ */
+ 
+void do_file(const char * file_name, parms *used_params)
+{
+	read_params(file_name, used_params);
 }
 
 /**
