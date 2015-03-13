@@ -89,21 +89,22 @@ void printf_handling(char * format, ...);
 
 /**
  *
- * \brief Main entry point of program
+ * \brief Program that imitates find
+ *
+ * This is the entry point of normal C programs.
  *
  *
  * \param argc the number of arguments
  * \param argv the arguments (including the program name in argv[0])
  *
- * \return always "success"
- * \retval 0 always
+ * \return EXIT_SUCCESS
  *
  */
 
 int main(int argc, char* argv[])
 {
-	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
-	params_number = argc-1; /*Parameteranzahl wird an globale Varialbe übergeben */
+	prgname = argv[0]; /* program name is passed to global variable prgname */
+	params_number = argc-1; /* number of parameters is passed to global variable params_number */
 	parms * used_params;
 
 	/* if no parameter was entered, call correctusage and terminate */
@@ -116,6 +117,7 @@ int main(int argc, char* argv[])
 	{
 		/*check parameters and save them in linked list */
 		used_params = check_parameter(argc, argv);
+
 		/* If no parameters were found and saved in the linked list, program terminates */
 		if (used_params == NULL)
 		{
@@ -168,7 +170,7 @@ parms * check_parameter(int argc, char * argv[])
 		exit(1);
 	}
 
-	/* Zählvariable i = 2 da erst bei argc =2 die Parameterübergaben beginnen - all parameters are checked */
+	/* counter variable = 2 as parameter passing only begins at argc = 2 - all parameters are checked */
 
 	for (; i < argc; i++)
 	{
@@ -355,8 +357,8 @@ parms * check_parameter(int argc, char * argv[])
 /**
  * \brief Function to check if the current file has the necessary parameters and print it
  *
- * \param * file_name
- * \param * used_params
+ * \param file_name
+ * \param used_params
  */
 
 void read_params(const char * file_name, parms * used_params)
@@ -430,11 +432,13 @@ void read_params(const char * file_name, parms * used_params)
 
 }
 /**
- * @todo \brief Function to open directories recursively
+ * \brief Function to open directories recursively
  *
  * \param dir_name
  * \param used_params
+ *
  */
+
 void do_dir(const char * dir_name, parms * used_params)
 {
 	 const struct dirent * d;
@@ -472,7 +476,6 @@ void do_dir(const char * dir_name, parms * used_params)
    closedir(dir);
 }
 
-
 /**
  *
  * \brief Function to check each file in directory
@@ -496,7 +499,6 @@ void do_file(const char * file_name, parms *used_params)
  *
  * \returns 1 if match is successful
  *
- *
  */
 
 int check_name(const char * file, const char * pattern)
@@ -515,10 +517,9 @@ int check_name(const char * file, const char * pattern)
 
 }
 
-
 /**
  *
- * @todo \brief Function to print out i-node information in -ls mode
+ * \brief Function to print out i-node information in -ls mode
  *
  * \param file
  *
@@ -537,7 +538,7 @@ void ls(const char * file)
 	mygroup = getgrgid(lsstat.st_gid);
 	mypw = getpwuid(lsstat.st_uid);
 
-	/** calling necessary functions and printing all information asked for in ls */
+	/* calling necessary functions and printing all information asked for in ls */
 	printf_handling("%ld\t%ld\t%s\t%ld\t%s\t%s\t%s\t%s\n",
 			(long)lsstat.st_ino,
 			(long)lsstat.st_blocks/2,
@@ -548,7 +549,6 @@ void ls(const char * file)
 			modifytime(lsstat.st_mtime), file);
 
 	/* checking for symbolic links */
-
 	if (S_ISLNK(lsstat.st_mode))
 	{
 		char * link;
@@ -576,7 +576,7 @@ void ls(const char * file)
 
 /**
  *
- * @todo \brief Function to modify time in requeste format
+ * \brief Function to modify time in requested format
  *
  * \param ftime
  *
@@ -595,8 +595,11 @@ char * modifytime(time_t ftime)
 	    return(filetime);
 }
 
-/** no parameter needed for this function */
-
+/**
+ *
+ * \brief Function that prints the correct usage of myfind when a wrong parameter is entered
+ *
+ */
 static void correctusage(void)
 {
 	printf("Correct use of: %s\n -user: searches entries of certain users\n -name: searches entries with a given name\n"
@@ -616,7 +619,7 @@ static void correctusage(void)
  *
  * \param st_mode
  *
- * \ return string with filled in permission
+ * \return string with filled in permission
  *
  */
 
@@ -690,7 +693,7 @@ char * checkpermissions(mode_t st_mode)
 
 /**
  *
- * \brief Function to check if a valid file type was entered and if there are any files of this type
+ * \brief Function to check file matches the entered type
  *
  * \param parms
  * \param buffer
@@ -729,7 +732,7 @@ int check_type(const char * parms, struct stat * buffer)
  * \param path
  *
  * \return directory
- * \ return -1 if lstat failed
+ * \return -1 if lstat failed
  *
  */
 
@@ -749,7 +752,7 @@ int is_dir (const char * path)
 
 /**
  *
- * \brief Function to check if a valid path was entered and if the path matches match
+ * \brief Function to check if file matches the path
  *
  * \param parms
  * \param dir_name
@@ -783,7 +786,7 @@ int check_path(const char * parms, const char * dir_name)
 
 int check_no_user(struct stat * buffer)
 {
-	if (getpwuid(buffer->st_uid)==NULL)
+	if (getpwuid(buffer->st_uid) == NULL)
 		return 1;
 	else
 		return 0;
@@ -792,13 +795,15 @@ int check_no_user(struct stat * buffer)
 /**
  *
  * \brief Function to check if valid user name was given and if file is of this user
+ *
  *  Checks for digits-only; if UID, check file_info
  *  If not digits-only, checks if valid user name; if yes, check file_info
+ *
  * \param parms
  * \param buffer
  *
  * \return 1 for successful match
- * \return 0 for unsuccesful match
+ * \return 0 for unsuccessful match
  */
 
 int check_user(const char * parms, struct stat * buffer)
@@ -847,13 +852,13 @@ int check_user(const char * parms, struct stat * buffer)
 
 /**
  *
- * \brief Function
+ * \brief Function that converts string to long value
  *
- * Converts string to long value. Returns -1 if it fails.
  * \param *value String to convert
  *
  * \return -1 for error
  * \return lvalue for success
+ *
  */
 
 long string_change(const char * value)
@@ -900,10 +905,11 @@ int p_print(const char * file_name)
  *
  * \brief Function error handling of printf
  *
- * \param * format, ...
- *
+ * \param format
+ * \param ...
  *
  */
+
 void printf_handling(char * format, ...)
 {
 	va_list args;
