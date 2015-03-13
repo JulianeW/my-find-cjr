@@ -6,28 +6,9 @@
  * @author Claudia Baierl ic14b003 <claudia.baierl@technikum-wien.at>
  * @author Rene Elsner ic14b016 <rene.elsner@technikum-wien.at>
  * @author Juliane Winkler ic14b059 <juliane.winkler@technikum-wien-at>
- * @date 2015/03/12
+ * @date 2015/03/13
  *
  * @version 1
- *
- * @todo Finish programming.
- * @todo Review it for missing error checks.
- * @todo Review it and check the source against the rules at
- *       https://cis.technikum-wien.at/documents/bic/2/bes/semesterplan/lu/c-rules.html
- * @todo Double check for "forbidden" functions (Minuspunkte!): gets(), scanf(), fscanf(), atoi(), atol()
- * @todo Unify function names, parameter names, etc.
- * @todo Einrückungen beachten.
- * @todo Run test scripts.
- * @todo Finalize Doxygen.
- *
- * @beachte Kommentar am Kopf des Moduls: Name des Moduls, Name und Matrikelnummer des Autors, Zweck des Moduls, Nummer des Beispiels (nur im Modul des Hauptprogramms)
- * @beachte Modulkopf im Makefile inkludieren
- * @beachte Im fehlerfreien Fall muss das Programm mit dem Exit-Code EXIT_SUCCESS (==0) terminieren, im Fehlerfall mit EXIT_FAILURE.
- * @beachte Funktionen, die keine Werte zurückliefern, sind als VOID zu deklarieren.
- * @beachte Fehlermeldungen sind auf die Standardfehlerausgabe) (stderr) zu schreiben und haben den Programmnamen (argv[0]) zu enthalten.
- * @beachte Konstantendefinitionen sind groß (z.B. MAXBUFFER) zu schreiben.
- * @beachte Namen von Variablen sind klein (current_buffer) zu schreiben, kein CamelCase.
- * @beachte Wichtige Konstanten sollen symbolische Namen erhalten (Makrodefinitionen!)
  *
  */
 
@@ -108,7 +89,6 @@ parms * check_parameter(int argc, char * argv[]);
  *
  * \brief
  *
- * @todo dir_name "." wenn kein Pfad eingegeben, ansonten Pfad aus argv[1]
  *
  * \param argc the number of arguments
  * \param argv the arguments itselves (including the program name in argv[0])
@@ -123,10 +103,6 @@ int main(int argc, char* argv[])
 	prgname = argv[0]; /* Programmname wird an globale Variable übergeben */
 	params_number = argc-1;
 	parms *used_params;
-
-
-
-
 
 	if (argc == 1)
 	{
@@ -163,10 +139,12 @@ int main(int argc, char* argv[])
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * \brief Function to create a linked list with the parameters
  *
- * \param *dir_name
- * \param *parms
+ * \param argc
+ * \param * argv[]
+ *
+ * @todo return
  *
  */
 
@@ -360,11 +338,21 @@ parms * check_parameter(int argc, char * argv[])
 	return start;
 
 }
+
+/**
+ * \brief Function to check if the current file has the necessary parameters and print it
+ *
+ * \param * file_name
+ * \param * used_params
+ */
+
 void read_params(const char * file_name, parms *used_params)
 {
 	parms *current_param = used_params;
 	int success = 1;
 	struct stat current_file;
+	int p_ls = 0;
+	int print = 0;
 
 	lstat(file_name, &current_file);
 
@@ -374,19 +362,20 @@ void read_params(const char * file_name, parms *used_params)
 		{
 			case NAME:
 			{
-				printf("Name übergeben.\n");/* Call Check_name */
 				success = check_name(file_name, current_param->pattern);
 				break;
 			}
 			case PRINT:
 			{
 				success = p_print(file_name);
+				print = 1;
 				break;
 
 			}
 			case LS:
 			{
 				ls(file_name);
+				p_ls = 1;
 				break;
 			}
 			case TYPE:
@@ -407,7 +396,6 @@ void read_params(const char * file_name, parms *used_params)
 			}
 			case USER:
 			{
-				printf("User uebergeben.\n");
 				success = check_user(current_param->pattern, &current_file);
 				break;
 			}
@@ -418,8 +406,16 @@ void read_params(const char * file_name, parms *used_params)
 		current_param = current_param->next;
 	}
 
-}
+	/* if (p_ls != 1 && print != 1)
+		p_print(file_name); */
 
+}
+/**
+ * @todo \brief Function to
+ *
+ * \param * dir_name
+ * \param * used_params
+ */
 void do_dir(const char * dir_name, parms *used_params)
 {
 	 const struct dirent *d;
@@ -459,15 +455,10 @@ void do_dir(const char * dir_name, parms *used_params)
 
 /**
  *
- * \brief
+ * \brief Function to check each file in directory
  *
- * @todo restliche Funktionen einbauen
- * @todo kann -print überhaupt noch weitere Argumente haben? wenn nicht, dann sollte
- * 		print vielleicht als erstes gecheckt werden und gar nicht erst in die for-Schleife rein
- * 		gegangen werden
- *
- * \param *parms
- * \param dir_name
+ * \param * file_name
+ * \param * used_params
  *
  */
  
@@ -478,25 +469,27 @@ void do_file(const char * file_name, parms *used_params)
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * \brief Function to check if entered name exists
  *
- * \param *parms[]
- * \param params_number
- * \param *param_array
+ * \param * file
+ * \param * pattern
+ *
+ * @todo return
+ * @todo return
  *
  */
 
 int check_name(const char *file, const char * pattern)
 {
-	char *name = NULL;
 	char *final_name = NULL;
+	char *name;
 	int success = 0;
 
-	strcpy(name, file);
-
+	name = strdup(file);
 	final_name = basename(name);
 
-	success = fnmatch(final_name, pattern, 0);
+	if(fnmatch(final_name, pattern, 0) == 0)
+		success = 1;
 
 	return success;
 
@@ -505,7 +498,7 @@ int check_name(const char *file, const char * pattern)
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * @todo \brief Function
  *
  * \param *file
  *
@@ -563,9 +556,11 @@ void ls(const char *file)
 
 /**
  *
- * \brief Function to check what kind of parameter is used
+ * @todo \brief Function
  *
  * \param ftime
+ *
+ * @todo return
  *
  */
 
